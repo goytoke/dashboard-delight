@@ -264,6 +264,24 @@ function Dashboard() {
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        aria-label="Delete wallet"
+                        className="text-destructive"
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              `Delete wallet "${w.name}"? Costs and transactions linked to it keep their record but lose the wallet name.`,
+                            )
+                          ) {
+                            deleteWallet.mutate(w.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+
                     </div>
                   </div>
                 </div>
