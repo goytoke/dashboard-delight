@@ -105,6 +105,8 @@ function Dashboard() {
   const { data: txs = [] } = useTable<Transaction>("transactions", "tx_date", false);
   const { data: movements = [] } = useTable<Movement>("movements", "move_date", false);
   const saveWallet = useSaveRow("payment_sources");
+  const deleteWallet = useDeleteRow("payment_sources");
+
   const [walletOpen, setWalletOpen] = useState(false);
   const [walletEditing, setWalletEditing] = useState<Named | null>(null);
 
