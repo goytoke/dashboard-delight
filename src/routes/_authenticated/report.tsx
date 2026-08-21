@@ -185,7 +185,10 @@ function ReportPage() {
 
 
   const sheets: Sheet[] = [
+    grandTotalSheet(date, totals),
+    ...statusSheets(date, status, problems),
     {
+
       title: `Per-account balances — ${date}`,
       columns: ["Account", "Status", "Opening", "Closing", "P/L", "Funded today", "Note"],
       rows: [
