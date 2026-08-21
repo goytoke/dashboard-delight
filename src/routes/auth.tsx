@@ -112,8 +112,18 @@ function AuthPage() {
         await supabase.from("profiles").update({ avatar_url: path }).eq("id", userId);
       }
     }
-    setLoading(false);
     if (data.session) {
+      setLoading(false);
+      navigate({ to: "/" });
+      return;
+    }
+    // No session returned — sign in right away with the same credentials.
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: syntheticEmail(u),
+      password,
+    });
+    setLoading(false);
+    if (!signInErr) {
       navigate({ to: "/" });
       return;
     }
