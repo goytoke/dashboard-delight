@@ -915,6 +915,43 @@ function ReportPage() {
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-2">
           <TheoryTable
+            title="Deposits"
+            empty="No direct deposit today — no fresh money was pushed from a wallet into an account."
+            rows={dayDeposits.map((f) => ({
+              id: f.id,
+              left: accountLabel(f.account_id),
+              mid: `from ${walletName(f.payment_source_id)}${
+                f.balance_after != null ? ` · balance after ${money(f.balance_after)}` : ""
+              }`,
+              amount: Number(f.amount),
+            }))}
+          />
+          <TheoryTable
+            title="Redeposits"
+            empty="No redeposit today — nothing withdrawn earlier was put back into an account."
+            rows={dayRedeposits.map((f) => ({
+              id: f.id,
+              left: accountLabel(f.account_id),
+              mid: `${f.from_account_id ? `from ${accountLabel(f.from_account_id)} · ` : ""}via ${walletName(
+                f.payment_source_id,
+              )}${f.balance_after != null ? ` · balance after ${money(f.balance_after)}` : ""}`,
+              amount: Number(f.amount),
+            }))}
+          />
+          <TheoryTable
+            title="Withdrawals"
+            empty="No withdrawal today — no money was pulled out of an account into a wallet."
+            rows={dayWithdrawals.map((f) => ({
+              id: f.id,
+              left: accountLabel(f.account_id),
+              mid: `into ${walletName(f.payment_source_id)}${
+                Number(f.fee ?? 0) > 0 ? ` · fee ${money(f.fee)}` : ""
+              }${f.balance_after != null ? ` · balance after ${money(f.balance_after)}` : ""}`,
+              amount: -Number(f.amount),
+            }))}
+          />
+          <TheoryTable
+
             title="Costs"
             empty="No cost today."
             rows={dayCosts.map((c) => ({
