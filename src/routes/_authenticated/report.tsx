@@ -144,6 +144,14 @@ function ReportPage() {
   const openProblems = problems.filter((p) => p.status !== "fixed");
   const subs = subscriptions(costs);
 
+  const { config } = useDeadlineConfig();
+  const totals = grandTotals(date, moneyCtx, rows);
+  const status = statusRows(date, config, { costs, vpsList, accounts });
+
+  const dayWithdrawals = dayFundingAll.filter((f) => f.kind === "withdraw");
+  const dayDeposits = dayFundingAll.filter((f) => f.kind === "deposit");
+  const dayRedeposits = dayFundingAll.filter((f) => f.kind === "redeposit");
+
   const history = useMemo(
     () =>
       [...logs]
@@ -158,13 +166,22 @@ function ReportPage() {
       : day?.status === "open"
         ? "This day is still open, so the figures below are calculated live from the data stored so far."
         : "This day was never opened, so the figures below are calculated live from whatever is recorded for the date.",
+    `Active accounts opened at ${money(totals.activeOpening)} and closed at ${money(totals.activeClosing)}; reserve accounts ${money(totals.reserveOpening)} → ${money(totals.reserveClosing)}; Binance ${money(totals.binanceOpening)} → ${money(totals.binanceClosing)}.`,
+    `Adding the three groups gives a grand opening of ${money(totals.grandOpening)} and a grand closing of ${money(totals.grandClosing)}, so by subtraction the net is ${totals.net.toFixed(2)}.`,
     `Grand opening ${money(grandOpening)} to grand closing ${money(grandClosing)} gives a trading net of ${tradingNet.toFixed(2)}.`,
     `Costs of ${money(costTotal)} and transfers sent of ${money(sent)} are taken off, transfers received of ${money(received)} are added back.`,
     `Net of the day: ${netOfDay.toFixed(2)}.`,
     ...moneyTheory(date, date, moneyCtx),
+    `Subscriptions bought on ${date}: ${status.boughtToday.length}; subscriptions still running: ${status.running.length}.`,
+    ...status.running.map((s) => `${s.purpose} — ${s.label}: ${subscriptionText(s)}.`),
+    ...status.vpsRows.map((v) => `VPS ${v.name} deadline ${v.endDate} — ${statusText(v.daysLeft, v.expired)}.`),
+    ...status.accountRows.map(
+      (a) => `Account ${a.label} deadline ${a.endDate} — ${statusText(a.daysLeft, a.expired)}.`,
+    ),
     `Open problems: ${openProblems.length}.`,
     `Subscriptions tracked: ${subs.length}, of which ${subs.filter((x) => x.due).length} are at or past their alert window.`,
   ];
+
 
 
   const sheets: Sheet[] = [
