@@ -607,6 +607,112 @@ function ReportPage() {
 
       <Card className="mt-6">
         <CardHeader>
+          <CardTitle className="text-base">Grand totals — {date}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Active accounts, reserve accounts and the Binance wallet added together; the net is the
+            closing minus the opening.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Group</TableHead>
+                <TableHead className="text-right">Opening</TableHead>
+                <TableHead className="text-right">Closing</TableHead>
+                <TableHead className="text-right">Change</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[
+                { label: "Active accounts", o: totals.activeOpening, c: totals.activeClosing },
+                { label: "Reserve accounts", o: totals.reserveOpening, c: totals.reserveClosing },
+                { label: "Binance wallet", o: totals.binanceOpening, c: totals.binanceClosing },
+              ].map((g) => (
+                <TableRow key={g.label}>
+                  <TableCell className="font-medium">{g.label}</TableCell>
+                  <TableCell className="text-right font-mono">{money(g.o)}</TableCell>
+                  <TableCell className="text-right font-mono">{money(g.c)}</TableCell>
+                  <TableCell className="text-right font-mono">
+                    <span className={g.c - g.o >= 0 ? "text-primary" : "text-destructive"}>
+                      {g.c - g.o >= 0 ? "+" : ""}
+                      {(g.c - g.o).toFixed(2)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="font-semibold">Grand total</TableCell>
+                <TableCell className="text-right font-mono font-semibold">
+                  {money(totals.grandOpening)}
+                </TableCell>
+                <TableCell className="text-right font-mono font-semibold">
+                  {money(totals.grandClosing)}
+                </TableCell>
+                <TableCell className="text-right font-mono font-semibold">
+                  {totals.net >= 0 ? "+" : ""}
+                  {totals.net.toFixed(2)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Subscriptions & deadlines — {date}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 lg:grid-cols-2">
+          <TheoryTable
+            title={`Subscriptions bought on ${date}`}
+            empty="No subscription was bought on this date."
+            rows={status.boughtToday.map((s) => ({
+              id: s.id,
+              left: `${s.purpose} — ${s.label}`,
+              mid: `${s.startsOn} → ${s.endsAt.toLocaleString()} · ${subscriptionText(s)}`,
+              amount: -s.amount,
+            }))}
+          />
+          <TheoryTable
+            title="Subscriptions still running"
+            empty="No other subscription is running."
+            rows={status.running.map((s) => ({
+              id: s.id,
+              left: `${s.purpose} — ${s.label}`,
+              mid: `ends ${s.endsAt.toLocaleString()} · ${subscriptionText(s)}`,
+              amount: -s.amount,
+            }))}
+          />
+          <TheoryTable
+            title="VPS deadlines"
+            empty="No VPS has a purchase date, so no deadline can be counted."
+            rows={status.vpsRows.map((v) => ({
+              id: v.name,
+              left: v.name,
+              mid: `${v.endDate} · ${statusText(v.daysLeft, v.expired)}`,
+              amount: null,
+            }))}
+          />
+          <TheoryTable
+            title="Account deadlines"
+            empty="No active account has an activation date, so no deadline can be counted."
+            rows={status.accountRows.map((a) => ({
+              id: a.label,
+              left: a.label,
+              mid: `${a.endDate} · ${statusText(a.daysLeft, a.expired)}`,
+              amount: null,
+            }))}
+          />
+        </CardContent>
+      </Card>
+
+
+
+      <Card className="mt-6">
+        <CardHeader>
           <CardTitle className="text-base">Per-account balances — {date}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
