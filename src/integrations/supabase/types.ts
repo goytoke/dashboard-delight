@@ -266,6 +266,56 @@ export type Database = {
           },
         ]
       }
+      day_results: {
+        Row: {
+          amount: number
+          created_at: string
+          direction: string
+          id: string
+          label: string | null
+          note: string | null
+          register_number: string | null
+          result_date: string
+          updated_at: string
+          user_id: string
+          vps_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          direction?: string
+          id?: string
+          label?: string | null
+          note?: string | null
+          register_number?: string | null
+          result_date?: string
+          updated_at?: string
+          user_id: string
+          vps_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          direction?: string
+          id?: string
+          label?: string | null
+          note?: string | null
+          register_number?: string | null
+          result_date?: string
+          updated_at?: string
+          user_id?: string
+          vps_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "day_results_vps_id_fkey"
+            columns: ["vps_id"]
+            isOneToOne: false
+            referencedRelation: "vps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funding_events: {
         Row: {
           account_id: string
@@ -545,6 +595,48 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      saved_reports: {
+        Row: {
+          created_at: string
+          from_date: string
+          heading: string
+          id: string
+          kind: string
+          name: string
+          sheets: Json
+          theory: Json
+          to_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_date: string
+          heading: string
+          id?: string
+          kind?: string
+          name: string
+          sheets?: Json
+          theory?: Json
+          to_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_date?: string
+          heading?: string
+          id?: string
+          kind?: string
+          name?: string
+          sheets?: Json
+          theory?: Json
+          to_date?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
