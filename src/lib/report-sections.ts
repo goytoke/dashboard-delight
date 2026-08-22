@@ -210,13 +210,6 @@ export function moneyTheory(from: string, to: string, ctx: MoneyContext) {
   return lines;
 }
 
-/** Balance of a wallet as of a date (null when that wallet does not exist). */
-function walletAt(name: string, asOf: string, ctx: MoneyContext) {
-  const hit = walletClosings(asOf, ctx).find((x) =>
-    x.wallet.name.toLowerCase().includes(name),
-  );
-  return hit ? hit.closing : null;
-}
 
 export type GrandTotals = {
   activeOpening: number;
