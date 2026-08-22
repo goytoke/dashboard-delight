@@ -21,7 +21,7 @@ import { subscriptions, subscriptionText } from "@/lib/alerts";
 import { addDays, endOfMonth, startOfMonth, startOfWeek, type WeekData } from "@/lib/week";
 import { PeriodReport } from "@/components/PeriodReport";
 import { SaveReportDialog } from "@/components/SaveReportDialog";
-import { DayResults, resultsNetOf } from "@/components/DayResults";
+import { resultsNetOf } from "@/components/DayResults";
 import { ReportExport } from "@/components/ReportExport";
 import type { Sheet } from "@/lib/export";
 import {
@@ -425,6 +425,114 @@ function ReportPage() {
                 </TableCell>
               </TableRow>
             </TableFooter>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Income, expense and net — {date}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Income is the profit or loss you recorded plus whatever was received from a transfer.
+            Expense is every cost of the day plus whatever was sent to somebody, because money sent
+            is a cost. The grand closing balance is the grand opening moved by that net.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Line</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[
+                { k: "Profit / loss recorded", v: ie.resultsNet },
+                { k: "Transfers received", v: ie.received },
+                { k: "INCOME", v: ie.income, strong: true },
+                { k: "Costs (subscriptions, VPS, everything paid)", v: -ie.costs },
+                { k: "Transfers sent (counted as a cost)", v: -ie.sent },
+                { k: "EXPENSE", v: -ie.expense, strong: true },
+              ].map((r) => (
+                <TableRow key={r.k}>
+                  <TableCell className={r.strong ? "font-semibold" : ""}>{r.k}</TableCell>
+                  <TableCell className="text-right font-mono">
+                    <span className={r.v >= 0 ? "text-primary" : "text-destructive"}>
+                      {r.v >= 0 ? "+" : ""}
+                      {r.v.toFixed(2)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell className="font-semibold">NET = income − expense</TableCell>
+                <TableCell className="text-right font-mono font-semibold">
+                  {ie.net >= 0 ? "+" : ""}
+                  {ie.net.toFixed(2)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Grand opening balance</TableCell>
+                <TableCell className="text-right font-mono">{money(totals.grandOpening)}</TableCell>
+              </TableRow>
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="font-semibold">
+                  Grand closing balance (opening + net)
+                </TableCell>
+                <TableCell className="text-right font-mono font-semibold">
+                  {money(ie.projectedClosing)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Profit / loss recorded — {date}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Entries saved on the Daily Log page, per VPS and register number.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>VPS</TableHead>
+                <TableHead>Register number</TableHead>
+                <TableHead>Label</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dayResultRows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                    No profit or loss was recorded on this date.
+                  </TableCell>
+                </TableRow>
+              )}
+              {dayResultRows.map((r) => {
+                const signed = r.direction === "loss" ? -Number(r.amount) : Number(r.amount);
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell>{vpsList.find((v) => v.id === r.vps_id)?.name ?? "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.register_number ?? "—"}</TableCell>
+                    <TableCell>{r.label ?? "—"}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      <span className={signed >= 0 ? "text-primary" : "text-destructive"}>
+                        {signed >= 0 ? "+" : ""}
+                        {signed.toFixed(2)}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
           </Table>
         </CardContent>
       </Card>
