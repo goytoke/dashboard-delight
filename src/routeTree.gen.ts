@@ -18,6 +18,7 @@ import { Route as AuthenticatedCostsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
 import { Route as AuthenticatedMovementsRouteImport } from './routes/_authenticated/movements'
 import { Route as AuthenticatedProblemsRouteImport } from './routes/_authenticated/problems'
+import { Route as AuthenticatedRecordsRouteImport } from './routes/_authenticated/records'
 import { Route as AuthenticatedReportRouteImport } from './routes/_authenticated/report'
 import { Route as AuthenticatedTransfersRouteImport } from './routes/_authenticated/transfers'
 import { Route as AuthenticatedVpsRouteImport } from './routes/_authenticated/vps'
@@ -66,6 +67,11 @@ const AuthenticatedProblemsRoute = AuthenticatedProblemsRouteImport.update({
   path: '/problems',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRecordsRoute = AuthenticatedRecordsRouteImport.update({
+  id: '/records',
+  path: '/records',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedReportRoute = AuthenticatedReportRouteImport.update({
   id: '/report',
   path: '/report',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/movements': typeof AuthenticatedMovementsRoute
   '/problems': typeof AuthenticatedProblemsRoute
+  '/records': typeof AuthenticatedRecordsRoute
   '/report': typeof AuthenticatedReportRoute
   '/transfers': typeof AuthenticatedTransfersRoute
   '/vps': typeof AuthenticatedVpsRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/movements': typeof AuthenticatedMovementsRoute
   '/problems': typeof AuthenticatedProblemsRoute
+  '/records': typeof AuthenticatedRecordsRoute
   '/report': typeof AuthenticatedReportRoute
   '/transfers': typeof AuthenticatedTransfersRoute
   '/vps': typeof AuthenticatedVpsRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/movements': typeof AuthenticatedMovementsRoute
   '/_authenticated/problems': typeof AuthenticatedProblemsRoute
+  '/_authenticated/records': typeof AuthenticatedRecordsRoute
   '/_authenticated/report': typeof AuthenticatedReportRoute
   '/_authenticated/transfers': typeof AuthenticatedTransfersRoute
   '/_authenticated/vps': typeof AuthenticatedVpsRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/daily-log'
     | '/movements'
     | '/problems'
+    | '/records'
     | '/report'
     | '/transfers'
     | '/vps'
@@ -146,6 +156,7 @@ export interface FileRouteTypes {
     | '/daily-log'
     | '/movements'
     | '/problems'
+    | '/records'
     | '/report'
     | '/transfers'
     | '/vps'
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/_authenticated/daily-log'
     | '/_authenticated/movements'
     | '/_authenticated/problems'
+    | '/_authenticated/records'
     | '/_authenticated/report'
     | '/_authenticated/transfers'
     | '/_authenticated/vps'
@@ -236,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProblemsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/records': {
+      id: '/_authenticated/records'
+      path: '/records'
+      fullPath: '/records'
+      preLoaderRoute: typeof AuthenticatedRecordsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/report': {
       id: '/_authenticated/report'
       path: '/report'
@@ -267,6 +286,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedMovementsRoute: typeof AuthenticatedMovementsRoute
   AuthenticatedProblemsRoute: typeof AuthenticatedProblemsRoute
+  AuthenticatedRecordsRoute: typeof AuthenticatedRecordsRoute
   AuthenticatedReportRoute: typeof AuthenticatedReportRoute
   AuthenticatedTransfersRoute: typeof AuthenticatedTransfersRoute
   AuthenticatedVpsRoute: typeof AuthenticatedVpsRoute
@@ -280,6 +300,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedMovementsRoute: AuthenticatedMovementsRoute,
   AuthenticatedProblemsRoute: AuthenticatedProblemsRoute,
+  AuthenticatedRecordsRoute: AuthenticatedRecordsRoute,
   AuthenticatedReportRoute: AuthenticatedReportRoute,
   AuthenticatedTransfersRoute: AuthenticatedTransfersRoute,
   AuthenticatedVpsRoute: AuthenticatedVpsRoute,
