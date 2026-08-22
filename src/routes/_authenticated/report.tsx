@@ -149,6 +149,16 @@ function ReportPage() {
   const totals = grandTotals(date, moneyCtx, rows);
   const status = statusRows(date, config, { costs, vpsList, accounts });
 
+  const dayResultRows = dayResults.filter((r) => r.result_date === date);
+  const resultsNet = resultsNetOf(dayResultRows);
+  const ie = incomeExpense({
+    resultsNet,
+    received,
+    costs: costTotal,
+    sent,
+    grandOpening: totals.grandOpening,
+  });
+
   const dayWithdrawals = dayFundingAll.filter((f) => f.kind === "withdraw");
   const dayDeposits = dayFundingAll.filter((f) => f.kind === "deposit");
   const dayRedeposits = dayFundingAll.filter((f) => f.kind === "redeposit");
@@ -172,6 +182,9 @@ function ReportPage() {
     `Grand opening ${money(grandOpening)} to grand closing ${money(grandClosing)} gives a trading net of ${tradingNet.toFixed(2)}.`,
     `Costs of ${money(costTotal)} and transfers sent of ${money(sent)} are taken off, transfers received of ${money(received)} are added back.`,
     `Net of the day: ${netOfDay.toFixed(2)}.`,
+    `Income of ${ie.income.toFixed(2)} = profit/loss recorded ${resultsNet.toFixed(2)} plus transfers received ${received.toFixed(2)}.`,
+    `Expense of ${ie.expense.toFixed(2)} = costs ${costTotal.toFixed(2)} (subscriptions, VPS and everything paid) plus transfers sent ${sent.toFixed(2)}, because money sent out is counted as a cost.`,
+    `Net = income − expense = ${ie.net.toFixed(2)}, so the grand closing balance is the grand opening ${money(totals.grandOpening)} plus that net = ${money(ie.projectedClosing)}.`,
     ...moneyTheory(date, date, moneyCtx),
     `Subscriptions bought on ${date}: ${status.boughtToday.length}; subscriptions still running: ${status.running.length}.`,
     ...status.running.map((s) => `${s.purpose} — ${s.label}: ${subscriptionText(s)}.`),
@@ -187,6 +200,19 @@ function ReportPage() {
 
   const sheets: Sheet[] = [
     grandTotalSheet(date, totals),
+    incomeExpenseSheet(date, ie, totals.grandOpening),
+    {
+      title: `Profit / loss recorded — ${date}`,
+      columns: ["VPS", "Register number", "Label", "Amount"],
+      rows: dayResultRows.length
+        ? dayResultRows.map((r) => [
+            vpsList.find((v) => v.id === r.vps_id)?.name ?? "",
+            r.register_number ?? "",
+            r.label ?? "",
+            r.direction === "loss" ? -Number(r.amount) : Number(r.amount),
+          ])
+        : [["No profit or loss was recorded on this date.", "", "", ""]],
+    },
     ...statusSheets(date, status, problems),
     {
 
@@ -287,6 +313,15 @@ function ReportPage() {
                 />
               </div>
               <DayControl date={date} />
+              <SaveReportDialog
+                kind="daily"
+                from={date}
+                to={date}
+                heading={`Daily report — ${date}`}
+                sheets={sheets}
+                theory={theory}
+                defaultName={`Daily report ${date}`}
+              />
               <ReportExport
                 heading={`Daily report — ${date}`}
                 fileBase={`report-${date}`}
@@ -338,8 +373,8 @@ function ReportPage() {
         <CardHeader>
           <CardTitle className="text-base">Grand totals — {date}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Active accounts, reserve accounts and the Binance wallet added together; the net is the
-            closing minus the opening.
+            Active accounts, reserve accounts and every wallet (Binance included) added together; the
+            net is the closing minus the opening.
           </p>
         </CardHeader>
         <CardContent className="p-0">
@@ -356,7 +391,11 @@ function ReportPage() {
               {[
                 { label: "Active accounts", o: totals.activeOpening, c: totals.activeClosing },
                 { label: "Reserve accounts", o: totals.reserveOpening, c: totals.reserveClosing },
-                { label: "Binance wallet", o: totals.binanceOpening, c: totals.binanceClosing },
+                ...totals.wallets.map((w) => ({
+                  label: `Wallet — ${w.name}`,
+                  o: w.opening,
+                  c: w.closing,
+                })),
               ].map((g) => (
                 <TableRow key={g.label}>
                   <TableCell className="font-medium">{g.label}</TableCell>
