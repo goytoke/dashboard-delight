@@ -19,6 +19,7 @@ import {
 import { PageHeader } from "@/components/PageHeader";
 import { FundingDialog } from "@/components/FundingDialog";
 import { WithdrawDialog } from "@/components/WithdrawDialog";
+import { DayResults } from "@/components/DayResults";
 import { supabase } from "@/integrations/supabase/client";
 import {
   money,
@@ -31,6 +32,7 @@ import {
   type Account,
   type Cost,
   type DailyLog,
+  type DayResult,
   type FundingEvent,
   type Named,
   type Row,
@@ -51,9 +53,12 @@ function DailyLogPage() {
   const { data: funding = [] } = useTable<FundingEvent>("funding_events", "event_date", false);
   const { data: costs = [] } = useTable<Cost>("costs", "cost_date", false);
   const { data: txs = [] } = useTable<Transaction>("transactions", "tx_date", false);
+  const { data: dayResults = [] } = useTable<DayResult>("day_results", "created_at", false);
 
   const saveFunding = useSaveRow("funding_events", ["payment_sources", "daily_logs"]);
   const delFunding = useDeleteRow("funding_events", ["payment_sources"]);
+  const saveResult = useSaveRow("day_results");
+  const delResult = useDeleteRow("day_results");
   const qc = useQueryClient();
 
   const [fundOpen, setFundOpen] = useState(false);
@@ -291,6 +296,14 @@ function DailyLogPage() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <DayResults
+        date={date}
+        vpsList={vpsList}
+        results={dayResults}
+        onSave={(row) => saveResult.mutate(row)}
+        onDelete={(id) => delResult.mutate(id)}
+      />
 
       <FundingDialog
         open={fundOpen}

@@ -18,13 +18,18 @@ import { PageHeader } from "@/components/PageHeader";
 import { DayControl, useDayFor } from "@/components/DayControl";
 import { computeDay } from "@/lib/day";
 import { subscriptions, subscriptionText } from "@/lib/alerts";
-import { addDays, computeWeek, startOfWeek, type WeekReport } from "@/lib/week";
+import { addDays, endOfMonth, startOfMonth, startOfWeek, type WeekData } from "@/lib/week";
+import { PeriodReport } from "@/components/PeriodReport";
+import { SaveReportDialog } from "@/components/SaveReportDialog";
+import { resultsNetOf } from "@/components/DayResults";
 import { ReportExport } from "@/components/ReportExport";
 import type { Sheet } from "@/lib/export";
 import {
   binanceClosing,
   grandTotalSheet,
   grandTotals,
+  incomeExpense,
+  incomeExpenseSheet,
   moneySheets,
   moneyTheory,
   type MoneyContext,
@@ -39,6 +44,7 @@ import {
   type Account,
   type Cost,
   type DailyLog,
+  type DayResult,
   type FundingEvent,
   type Movement,
   type Named,
@@ -81,23 +87,18 @@ function ReportPage() {
   const { data: wallets = [] } = useTable<Named>("payment_sources", "name", true);
   const { data: vpsList = [] } = useTable<Vps>("vps", "vps_number", true);
 
-  const [weekFrom, setWeekFrom] = useState(startOfWeek(today()));
-  const [weekTo, setWeekTo] = useState(addDays(startOfWeek(today()), 6));
-  const [week, setWeek] = useState<WeekReport | null>(null);
+  const { data: dayResults = [] } = useTable<DayResult>("day_results", "created_at", false);
 
-  const generateWeek = () =>
-    setWeek(
-      computeWeek(weekFrom, weekTo, {
-        accounts,
-        logs,
-        funding,
-        costs,
-        transactions: txs,
-        movements,
-        problems,
-        vpsList,
-      }),
-    );
+  const periodData: WeekData = {
+    accounts,
+    logs,
+    funding,
+    costs,
+    transactions: txs,
+    movements,
+    problems,
+    vpsList,
+  };
 
   const accountLabel = (id: string | null | undefined) => {
     const a = accounts.find((x) => x.id === id);
@@ -148,6 +149,16 @@ function ReportPage() {
   const totals = grandTotals(date, moneyCtx, rows);
   const status = statusRows(date, config, { costs, vpsList, accounts });
 
+  const dayResultRows = dayResults.filter((r) => r.result_date === date);
+  const resultsNet = resultsNetOf(dayResultRows);
+  const ie = incomeExpense({
+    resultsNet,
+    received,
+    costs: costTotal,
+    sent,
+    grandOpening: totals.grandOpening,
+  });
+
   const dayWithdrawals = dayFundingAll.filter((f) => f.kind === "withdraw");
   const dayDeposits = dayFundingAll.filter((f) => f.kind === "deposit");
   const dayRedeposits = dayFundingAll.filter((f) => f.kind === "redeposit");
@@ -171,6 +182,9 @@ function ReportPage() {
     `Grand opening ${money(grandOpening)} to grand closing ${money(grandClosing)} gives a trading net of ${tradingNet.toFixed(2)}.`,
     `Costs of ${money(costTotal)} and transfers sent of ${money(sent)} are taken off, transfers received of ${money(received)} are added back.`,
     `Net of the day: ${netOfDay.toFixed(2)}.`,
+    `Income of ${ie.income.toFixed(2)} = profit/loss recorded ${resultsNet.toFixed(2)} plus transfers received ${received.toFixed(2)}.`,
+    `Expense of ${ie.expense.toFixed(2)} = costs ${costTotal.toFixed(2)} (subscriptions, VPS and everything paid) plus transfers sent ${sent.toFixed(2)}, because money sent out is counted as a cost.`,
+    `Net = income − expense = ${ie.net.toFixed(2)}, so the grand closing balance is the grand opening ${money(totals.grandOpening)} plus that net = ${money(ie.projectedClosing)}.`,
     ...moneyTheory(date, date, moneyCtx),
     `Subscriptions bought on ${date}: ${status.boughtToday.length}; subscriptions still running: ${status.running.length}.`,
     ...status.running.map((s) => `${s.purpose} — ${s.label}: ${subscriptionText(s)}.`),
@@ -186,6 +200,19 @@ function ReportPage() {
 
   const sheets: Sheet[] = [
     grandTotalSheet(date, totals),
+    incomeExpenseSheet(date, ie, totals.grandOpening),
+    {
+      title: `Profit / loss recorded — ${date}`,
+      columns: ["VPS", "Register number", "Label", "Amount"],
+      rows: dayResultRows.length
+        ? dayResultRows.map((r) => [
+            vpsList.find((v) => v.id === r.vps_id)?.name ?? "",
+            r.register_number ?? "",
+            r.label ?? "",
+            r.direction === "loss" ? -Number(r.amount) : Number(r.amount),
+          ])
+        : [["No profit or loss was recorded on this date.", "", "", ""]],
+    },
     ...statusSheets(date, status, problems),
     {
 
@@ -266,82 +293,6 @@ function ReportPage() {
     },
   ];
 
-  const weekSheets: Sheet[] = week
-    ? [
-        {
-          title: `Week ${week.from} → ${week.to} — day by day`,
-          columns: [
-            "Date",
-            "Grand opening",
-            "Grand closing",
-            "Trading net",
-            "Deposits",
-            "Withdrawals",
-            "Costs",
-            "Net of day",
-          ],
-          rows: [
-            ...week.days.map((d) => [
-              d.date,
-              d.snapshot.grand_opening,
-              d.snapshot.grand_closing,
-              Number(d.snapshot.trading_net.toFixed(2)),
-              d.snapshot.funded_total,
-              d.snapshot.withdrawn_total ?? 0,
-              d.snapshot.cost_total,
-              Number(d.snapshot.net_of_day.toFixed(2)),
-            ]),
-            [
-              "WEEK TOTAL",
-              week.grandOpening,
-              week.grandClosing,
-              Number(week.tradingNet.toFixed(2)),
-              week.fundedTotal,
-              week.withdrawnTotal,
-              week.costTotal,
-              Number(week.netOfWeek.toFixed(2)),
-            ],
-          ],
-        },
-        {
-          title: "Per account — first day opening vs last day closing",
-          columns: ["Account", "First day opening", "Last day closing", "Change"],
-          rows: week.accountOpenings.map((r) => [
-            r.label,
-            r.firstOpening ?? "",
-            r.lastClosing ?? "",
-            r.firstOpening != null && r.lastClosing != null
-              ? Number((r.lastClosing - r.firstOpening).toFixed(2))
-              : "",
-          ]),
-        },
-        {
-          title: "Actions this week",
-          columns: ["What", "Detail"],
-          rows: [
-            ["Problems solved", String(week.problemsSolved.length)],
-            ...week.problemsSolved.map((p) => [p.title, p.action_note ?? "solved"]),
-            ["Problems still open", String(week.problemsOpen.length)],
-            ["Costs paid", String(week.weekCosts.length)],
-            ...week.weekCosts.map((c) => [c.reason, String(Number(c.amount))]),
-            ["Subscriptions paid", String(week.subscriptionCosts.length)],
-            ["VPS in use", String(week.vpsUsed)],
-          ],
-        },
-        ...moneySheets(week.from, week.to, `${week.from} → ${week.to}`, moneyCtx),
-      ]
-    : [];
-
-  const weekTheory = week
-    ? [
-        `Week from ${week.from} to ${week.to}.`,
-        `First recorded day ${week.firstDate ?? "—"} opened the week at ${money(week.firstOpening)}; last recorded day ${week.lastDate ?? "—"} ended it at ${money(week.lastClosing)}, a change of ${week.weekChange.toFixed(2)}.`,
-        `Trading net across the week ${week.tradingNet.toFixed(2)}, costs ${money(week.costTotal)}, transfers sent ${money(week.sent)}, received ${money(week.received)} — net of the week ${week.netOfWeek.toFixed(2)}.`,
-        ...moneyTheory(week.from, week.to, moneyCtx),
-        `${week.problemsSolved.length} problems solved, ${week.problemsOpen.length} still open, ${week.subscriptionCosts.length} subscriptions paid, ${week.vpsUsed} VPS in use.`,
-      ]
-    : [];
-
   return (
     <div>
       <PageHeader
@@ -362,6 +313,15 @@ function ReportPage() {
                 />
               </div>
               <DayControl date={date} />
+              <SaveReportDialog
+                kind="daily"
+                from={date}
+                to={date}
+                heading={`Daily report — ${date}`}
+                sheets={sheets}
+                theory={theory}
+                defaultName={`Daily report ${date}`}
+              />
               <ReportExport
                 heading={`Daily report — ${date}`}
                 fileBase={`report-${date}`}
@@ -372,223 +332,27 @@ function ReportPage() {
         }
       />
 
-      <Card className="mb-6">
-        <CardHeader className="gap-3">
-          <CardTitle className="text-base">Weekly report</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Pick the first and last day of the records, generate the week, preview it below, then
-            export or send it.
-          </p>
-          <div className="flex flex-wrap items-end gap-2">
-            <div>
-              <Label htmlFor="week-from" className="text-xs text-muted-foreground">
-                From
-              </Label>
-              <Input
-                id="week-from"
-                type="date"
-                value={weekFrom}
-                onChange={(e) => setWeekFrom(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <div>
-              <Label htmlFor="week-to" className="text-xs text-muted-foreground">
-                To
-              </Label>
-              <Input
-                id="week-to"
-                type="date"
-                value={weekTo}
-                onChange={(e) => setWeekTo(e.target.value)}
-                className="w-40"
-              />
-            </div>
-            <Button onClick={generateWeek} disabled={!weekFrom || !weekTo || weekFrom > weekTo}>
-              Generate weekly report
-            </Button>
-            {week && (
-              <ReportExport
-                heading={`Weekly report — ${week.from} to ${week.to}`}
-                fileBase={`weekly-report-${week.from}_${week.to}`}
-                sheets={weekSheets}
-                theory={weekTheory}
-              />
-            )}
-          </div>
-        </CardHeader>
-        {week && (
-          <CardContent className="space-y-6 p-0 pb-6">
-            <div className="grid gap-3 px-6 sm:grid-cols-2 xl:grid-cols-4">
-              <SummaryCard
-                label={`First day opening (${week.firstDate ?? "—"})`}
-                value={money(week.firstOpening)}
-              />
-              <SummaryCard
-                label={`Last day closing (${week.lastDate ?? "—"})`}
-                value={money(week.lastClosing)}
-              />
-              <SummaryCard
-                label="Week change"
-                value={`${week.weekChange >= 0 ? "+" : ""}${week.weekChange.toFixed(2)}`}
-                tone={week.weekChange >= 0 ? "up" : "down"}
-              />
-              <SummaryCard
-                label="Net of the week"
-                value={`${week.netOfWeek >= 0 ? "+" : ""}${week.netOfWeek.toFixed(2)}`}
-                tone={week.netOfWeek >= 0 ? "up" : "down"}
-              />
-            </div>
+      <PeriodReport
+        kind="weekly"
+        title="Weekly report"
+        hint="Pick the first and the last day of the week on the calendars, generate it, then name and save it or export it. Days with no record (Saturday, Sunday) are skipped."
+        from={startOfWeek(today())}
+        to={addDays(startOfWeek(today()), 6)}
+        data={periodData}
+        moneyCtx={moneyCtx}
+        dayResults={dayResults}
+      />
 
-            <div>
-              <p className="px-6 pb-2 text-sm font-medium">Day by day</p>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Grand opening</TableHead>
-                    <TableHead className="text-right">Grand closing</TableHead>
-                    <TableHead className="text-right">Trading net</TableHead>
-                    <TableHead className="text-right">Deposits</TableHead>
-                    <TableHead className="text-right">Withdrawals</TableHead>
-                    <TableHead className="text-right">Costs</TableHead>
-                    <TableHead className="text-right">Net of day</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {week.days.map((d) => (
-                    <TableRow key={d.date}>
-                      <TableCell className="font-mono text-xs">{d.date}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {money(d.snapshot.grand_opening)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {money(d.snapshot.grand_closing)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {d.snapshot.trading_net.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {money(d.snapshot.funded_total)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {money(d.snapshot.withdrawn_total ?? 0)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {money(d.snapshot.cost_total)}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {d.snapshot.net_of_day.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell className="font-semibold">Week total</TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {money(week.grandOpening)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {money(week.grandClosing)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {week.tradingNet.toFixed(2)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {money(week.fundedTotal)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {money(week.withdrawnTotal)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {money(week.costTotal)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-semibold">
-                      {week.netOfWeek.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-            </div>
-
-            <div>
-              <p className="px-6 pb-2 text-sm font-medium">
-                Per account — first day opening vs last day closing
-              </p>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Account</TableHead>
-                    <TableHead className="text-right">First day opening</TableHead>
-                    <TableHead className="text-right">Last day closing</TableHead>
-                    <TableHead className="text-right">Change</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {week.accountOpenings.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
-                        Nothing recorded in this range.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {week.accountOpenings.map((r) => {
-                    const change =
-                      r.firstOpening != null && r.lastClosing != null
-                        ? r.lastClosing - r.firstOpening
-                        : null;
-                    return (
-                      <TableRow key={r.label}>
-                        <TableCell className="font-medium">{r.label}</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {money(r.firstOpening)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {money(r.lastClosing)}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {change === null ? (
-                            "\u2014"
-                          ) : (
-                            <span className={change >= 0 ? "text-primary" : "text-destructive"}>
-                              {change >= 0 ? "+" : ""}
-                              {change.toFixed(2)}
-                            </span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-
-            <div className="px-6">
-              <p className="pb-2 text-sm font-medium">Actions & theory of the week</p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Badge variant="outline" className="justify-start">
-                  {week.problemsSolved.length} problems solved
-                </Badge>
-                <Badge variant="outline" className="justify-start">
-                  {week.problemsOpen.length} problems still open
-                </Badge>
-                <Badge variant="outline" className="justify-start">
-                  {week.subscriptionCosts.length} subscriptions paid
-                </Badge>
-                <Badge variant="outline" className="justify-start">
-                  {week.vpsUsed} VPS in use
-                </Badge>
-              </div>
-              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                {weekTheory.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-            </div>
-          </CardContent>
-        )}
-      </Card>
+      <PeriodReport
+        kind="monthly"
+        title="Monthly report"
+        hint="Pick the first and the last day of the month, generate it, then name and save it or export it. Only the days that have records are counted."
+        from={startOfMonth(today())}
+        to={endOfMonth(today())}
+        data={periodData}
+        moneyCtx={moneyCtx}
+        dayResults={dayResults}
+      />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryCard label="Grand opening balance" value={money(grandOpening)} />
@@ -609,8 +373,8 @@ function ReportPage() {
         <CardHeader>
           <CardTitle className="text-base">Grand totals — {date}</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Active accounts, reserve accounts and the Binance wallet added together; the net is the
-            closing minus the opening.
+            Active accounts, reserve accounts and every wallet (Binance included) added together; the
+            net is the closing minus the opening.
           </p>
         </CardHeader>
         <CardContent className="p-0">
@@ -627,7 +391,11 @@ function ReportPage() {
               {[
                 { label: "Active accounts", o: totals.activeOpening, c: totals.activeClosing },
                 { label: "Reserve accounts", o: totals.reserveOpening, c: totals.reserveClosing },
-                { label: "Binance wallet", o: totals.binanceOpening, c: totals.binanceClosing },
+                ...totals.wallets.map((w) => ({
+                  label: `Wallet — ${w.name}`,
+                  o: w.opening,
+                  c: w.closing,
+                })),
               ].map((g) => (
                 <TableRow key={g.label}>
                   <TableCell className="font-medium">{g.label}</TableCell>
@@ -657,6 +425,114 @@ function ReportPage() {
                 </TableCell>
               </TableRow>
             </TableFooter>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Income, expense and net — {date}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Income is the profit or loss you recorded plus whatever was received from a transfer.
+            Expense is every cost of the day plus whatever was sent to somebody, because money sent
+            is a cost. The grand closing balance is the grand opening moved by that net.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Line</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {[
+                { k: "Profit / loss recorded", v: ie.resultsNet },
+                { k: "Transfers received", v: ie.received },
+                { k: "INCOME", v: ie.income, strong: true },
+                { k: "Costs (subscriptions, VPS, everything paid)", v: -ie.costs },
+                { k: "Transfers sent (counted as a cost)", v: -ie.sent },
+                { k: "EXPENSE", v: -ie.expense, strong: true },
+              ].map((r) => (
+                <TableRow key={r.k}>
+                  <TableCell className={r.strong ? "font-semibold" : ""}>{r.k}</TableCell>
+                  <TableCell className="text-right font-mono">
+                    <span className={r.v >= 0 ? "text-primary" : "text-destructive"}>
+                      {r.v >= 0 ? "+" : ""}
+                      {r.v.toFixed(2)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell className="font-semibold">NET = income − expense</TableCell>
+                <TableCell className="text-right font-mono font-semibold">
+                  {ie.net >= 0 ? "+" : ""}
+                  {ie.net.toFixed(2)}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell>Grand opening balance</TableCell>
+                <TableCell className="text-right font-mono">{money(totals.grandOpening)}</TableCell>
+              </TableRow>
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell className="font-semibold">
+                  Grand closing balance (opening + net)
+                </TableCell>
+                <TableCell className="text-right font-mono font-semibold">
+                  {money(ie.projectedClosing)}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="text-base">Profit / loss recorded — {date}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Entries saved on the Daily Log page, per VPS and register number.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>VPS</TableHead>
+                <TableHead>Register number</TableHead>
+                <TableHead>Label</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dayResultRows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                    No profit or loss was recorded on this date.
+                  </TableCell>
+                </TableRow>
+              )}
+              {dayResultRows.map((r) => {
+                const signed = r.direction === "loss" ? -Number(r.amount) : Number(r.amount);
+                return (
+                  <TableRow key={r.id}>
+                    <TableCell>{vpsList.find((v) => v.id === r.vps_id)?.name ?? "—"}</TableCell>
+                    <TableCell className="font-mono text-xs">{r.register_number ?? "—"}</TableCell>
+                    <TableCell>{r.label ?? "—"}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      <span className={signed >= 0 ? "text-primary" : "text-destructive"}>
+                        {signed >= 0 ? "+" : ""}
+                        {signed.toFixed(2)}
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
           </Table>
         </CardContent>
       </Card>

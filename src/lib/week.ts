@@ -69,6 +69,17 @@ export function startOfWeek(date: string) {
   return d.toISOString().slice(0, 10);
 }
 
+export function startOfMonth(date: string) {
+  return `${date.slice(0, 7)}-01`;
+}
+
+export function endOfMonth(date: string) {
+  const d = new Date(`${date.slice(0, 7)}-01T00:00:00Z`);
+  d.setUTCMonth(d.getUTCMonth() + 1);
+  d.setUTCDate(0);
+  return d.toISOString().slice(0, 10);
+}
+
 export function addDays(date: string, days: number) {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);

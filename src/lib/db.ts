@@ -14,7 +14,9 @@ export type TableName =
   | "payment_sources"
   | "problems"
   | "movements"
-  | "cost_purposes";
+  | "cost_purposes"
+  | "day_results"
+  | "saved_reports";
 
 export type Row = Record<string, unknown>;
 
@@ -138,6 +140,29 @@ export interface Transaction extends Row {
   person_id: string | null;
   payment_source_id: string | null;
   reason: string | null;
+}
+
+export interface DayResult extends Row {
+  id: string;
+  result_date: string;
+  vps_id: string | null;
+  register_number: string | null;
+  direction: "profit" | "loss";
+  amount: number;
+  label: string | null;
+  note: string | null;
+}
+
+export interface SavedReport extends Row {
+  id: string;
+  name: string;
+  kind: "daily" | "weekly" | "monthly";
+  from_date: string;
+  to_date: string;
+  heading: string;
+  sheets: unknown;
+  theory: unknown;
+  created_at: string;
 }
 
 export interface Named extends Row {
