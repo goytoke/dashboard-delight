@@ -18,13 +18,18 @@ import { PageHeader } from "@/components/PageHeader";
 import { DayControl, useDayFor } from "@/components/DayControl";
 import { computeDay } from "@/lib/day";
 import { subscriptions, subscriptionText } from "@/lib/alerts";
-import { addDays, computeWeek, startOfWeek, type WeekReport } from "@/lib/week";
+import { addDays, endOfMonth, startOfMonth, startOfWeek, type WeekData } from "@/lib/week";
+import { PeriodReport } from "@/components/PeriodReport";
+import { SaveReportDialog } from "@/components/SaveReportDialog";
+import { DayResults, resultsNetOf } from "@/components/DayResults";
 import { ReportExport } from "@/components/ReportExport";
 import type { Sheet } from "@/lib/export";
 import {
   binanceClosing,
   grandTotalSheet,
   grandTotals,
+  incomeExpense,
+  incomeExpenseSheet,
   moneySheets,
   moneyTheory,
   type MoneyContext,
@@ -39,6 +44,7 @@ import {
   type Account,
   type Cost,
   type DailyLog,
+  type DayResult,
   type FundingEvent,
   type Movement,
   type Named,
@@ -81,23 +87,18 @@ function ReportPage() {
   const { data: wallets = [] } = useTable<Named>("payment_sources", "name", true);
   const { data: vpsList = [] } = useTable<Vps>("vps", "vps_number", true);
 
-  const [weekFrom, setWeekFrom] = useState(startOfWeek(today()));
-  const [weekTo, setWeekTo] = useState(addDays(startOfWeek(today()), 6));
-  const [week, setWeek] = useState<WeekReport | null>(null);
+  const { data: dayResults = [] } = useTable<DayResult>("day_results", "created_at", false);
 
-  const generateWeek = () =>
-    setWeek(
-      computeWeek(weekFrom, weekTo, {
-        accounts,
-        logs,
-        funding,
-        costs,
-        transactions: txs,
-        movements,
-        problems,
-        vpsList,
-      }),
-    );
+  const periodData: WeekData = {
+    accounts,
+    logs,
+    funding,
+    costs,
+    transactions: txs,
+    movements,
+    problems,
+    vpsList,
+  };
 
   const accountLabel = (id: string | null | undefined) => {
     const a = accounts.find((x) => x.id === id);
