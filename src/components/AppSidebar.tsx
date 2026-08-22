@@ -10,6 +10,7 @@ import {
   BarChart3,
   AlertTriangle,
   Shuffle,
+  FolderClock,
   LogOut,
 } from "lucide-react";
 import {
@@ -37,6 +38,7 @@ const items = [
   { title: "Movements", url: "/movements", icon: Shuffle },
   { title: "Problems", url: "/problems", icon: AlertTriangle },
   { title: "Report", url: "/report", icon: BarChart3 },
+  { title: "Records", url: "/records", icon: FolderClock },
 ] as const;
 
 export function AppSidebar() {
