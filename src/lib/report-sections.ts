@@ -225,14 +225,17 @@ export type GrandTotals = {
   reserveClosing: number;
   binanceOpening: number;
   binanceClosing: number;
+  walletsOpening: number;
+  walletsClosing: number;
+  wallets: { name: string; opening: number; closing: number }[];
   grandOpening: number;
   grandClosing: number;
   net: number;
 };
 
 /**
- * Grand opening/closing across active accounts, reserve accounts and the
- * Binance wallet, plus the net between them (negative or positive).
+ * Grand opening/closing across active accounts, reserve accounts and every
+ * wallet (Binance included), plus the net between them.
  */
 export function grandTotals(
   date: string,
@@ -250,34 +253,110 @@ export function grandTotals(
   const activeClosing = sum("active", "closing");
   const reserveOpening = sum("reserve", "opening");
   const reserveClosing = sum("reserve", "closing");
-  const binanceOpening = walletAt("binance", prev, ctx) ?? 0;
-  const binanceClosingBal = walletAt("binance", date, ctx) ?? 0;
 
-  const grandOpening = activeOpening + reserveOpening + binanceOpening;
-  const grandClosing = activeClosing + reserveClosing + binanceClosingBal;
+  const openingByWallet = walletClosings(prev, ctx);
+  const closingByWallet = walletClosings(date, ctx);
+  const wallets = closingByWallet.map((c) => ({
+    name: c.wallet.name,
+    opening: openingByWallet.find((o) => o.wallet.id === c.wallet.id)?.closing ?? 0,
+    closing: c.closing,
+  }));
+  const walletsOpening = wallets.reduce((s, w) => s + w.opening, 0);
+  const walletsClosing = wallets.reduce((s, w) => s + w.closing, 0);
+  const binance = wallets.find((w) => w.name.toLowerCase().includes("binance"));
+
+  const grandOpening = activeOpening + reserveOpening + walletsOpening;
+  const grandClosing = activeClosing + reserveClosing + walletsClosing;
 
   return {
     activeOpening,
     activeClosing,
     reserveOpening,
     reserveClosing,
-    binanceOpening,
-    binanceClosing: binanceClosingBal,
+    binanceOpening: binance?.opening ?? 0,
+    binanceClosing: binance?.closing ?? 0,
+    walletsOpening,
+    walletsClosing,
+    wallets,
     grandOpening,
     grandClosing,
     net: grandClosing - grandOpening,
   };
 }
 
+const round = (n: number) => Number(n.toFixed(2));
+
 export function grandTotalSheet(date: string, t: GrandTotals): Sheet {
   return {
     title: `Grand totals — ${date}`,
     columns: ["Group", "Opening balance", "Closing balance", "Change"],
     rows: [
-      ["Active accounts", t.activeOpening, t.activeClosing, Number((t.activeClosing - t.activeOpening).toFixed(2))],
-      ["Reserve accounts", t.reserveOpening, t.reserveClosing, Number((t.reserveClosing - t.reserveOpening).toFixed(2))],
-      ["Binance wallet", t.binanceOpening, t.binanceClosing, Number((t.binanceClosing - t.binanceOpening).toFixed(2))],
-      ["GRAND TOTAL", Number(t.grandOpening.toFixed(2)), Number(t.grandClosing.toFixed(2)), Number(t.net.toFixed(2))],
+      ["Active accounts", round(t.activeOpening), round(t.activeClosing), round(t.activeClosing - t.activeOpening)],
+      ["Reserve accounts", round(t.reserveOpening), round(t.reserveClosing), round(t.reserveClosing - t.reserveOpening)],
+      ...t.wallets.map((w) => [
+        `Wallet — ${w.name}`,
+        round(w.opening),
+        round(w.closing),
+        round(w.closing - w.opening),
+      ]),
+      ["GRAND TOTAL", round(t.grandOpening), round(t.grandClosing), round(t.net)],
     ],
   };
 }
+
+export type IncomeExpense = {
+  resultsNet: number;
+  received: number;
+  income: number;
+  costs: number;
+  sent: number;
+  expense: number;
+  net: number;
+  projectedClosing: number;
+};
+
+/**
+ * Net of the day the way the user counts it: income (the profit/loss entries
+ * plus money received from a transfer) minus expense (costs plus money sent).
+ * The projected grand closing is the grand opening moved by that net.
+ */
+export function incomeExpense(params: {
+  resultsNet: number;
+  received: number;
+  costs: number;
+  sent: number;
+  grandOpening: number;
+}): IncomeExpense {
+  const income = params.resultsNet + params.received;
+  const expense = params.costs + params.sent;
+  const net = income - expense;
+  return {
+    resultsNet: params.resultsNet,
+    received: params.received,
+    income,
+    costs: params.costs,
+    sent: params.sent,
+    expense,
+    net,
+    projectedClosing: params.grandOpening + net,
+  };
+}
+
+export function incomeExpenseSheet(label: string, t: IncomeExpense, grandOpening: number): Sheet {
+  return {
+    title: `Income, expense and net — ${label}`,
+    columns: ["Line", "Amount"],
+    rows: [
+      ["Profit / loss recorded", round(t.resultsNet)],
+      ["Transfers received", round(t.received)],
+      ["INCOME", round(t.income)],
+      ["Costs (subscriptions, VPS, everything paid)", round(t.costs)],
+      ["Transfers sent (counted as a cost)", round(t.sent)],
+      ["EXPENSE", round(t.expense)],
+      ["NET = income − expense", round(t.net)],
+      ["Grand opening balance", round(grandOpening)],
+      ["Grand closing balance = opening + net", round(t.projectedClosing)],
+    ],
+  };
+}
+
