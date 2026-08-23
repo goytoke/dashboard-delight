@@ -355,19 +355,20 @@ function ReportPage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Grand opening balance" value={money(grandOpening)} />
-        <SummaryCard label="Grand closing balance" value={money(grandClosing)} />
+        <SummaryCard label="Grand opening balance" value={money(totals.grandOpening)} />
+        <SummaryCard label="Grand closing balance" value={money(totals.grandClosing)} />
         <SummaryCard
-          label="Trading net (closing − opening)"
+          label="Accounts trading net (closing − opening)"
           value={`${tradingNet >= 0 ? "+" : ""}${tradingNet.toFixed(2)}`}
           tone={tradingNet >= 0 ? "up" : "down"}
         />
         <SummaryCard
-          label="Net of the day (after cost & transfers)"
-          value={`${netOfDay >= 0 ? "+" : ""}${netOfDay.toFixed(2)}`}
-          tone={netOfDay >= 0 ? "up" : "down"}
+          label="Net of the day (income − expense)"
+          value={`${ie.net >= 0 ? "+" : ""}${ie.net.toFixed(2)}`}
+          tone={ie.net >= 0 ? "up" : "down"}
         />
       </div>
+
 
       <Card className="mt-6">
         <CardHeader>
