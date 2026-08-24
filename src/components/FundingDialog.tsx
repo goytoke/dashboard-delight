@@ -97,9 +97,37 @@ export function FundingDialog({
   const fromAfter = fromBeforeN != null && withdrawN != null ? fromBeforeN - withdrawN : null;
 
   const walletNow = walletId ? walletBalanceOf?.(walletId) ?? null : null;
+  const walletAfterWithdraw = walletNow == null ? null : walletNow + (withdrawN ?? 0);
   const walletDelta =
     kind === "deposit" ? -(amountN ?? 0) : (withdrawN ?? 0) - (amountN ?? 0);
   const walletAfter = walletNow == null ? null : walletNow + walletDelta;
+
+  // Pick the paired account on the same VPS: the other broker (HFM <-> Rickmil).
+  const pickPaired = (sourceId: string) => {
+    const src = accounts.find((a) => a.id === sourceId);
+    if (!src) return null;
+    const sameVps = accounts.filter(
+      (a) => a.id !== sourceId && String(a.vps_id ?? "") === String(src.vps_id ?? ""),
+    );
+    return (
+      sameVps.find((a) => a.broker.toLowerCase() !== src.broker.toLowerCase()) ??
+      sameVps[0] ??
+      null
+    );
+  };
+
+  const chooseSource = (v: string) => {
+    setFromAccountId(v);
+    const sug = suggestedBalance?.(v);
+    setFromBefore(sug != null ? String(sug) : "");
+    const paired = pickPaired(v);
+    if (paired) {
+      setVpsId(String(paired.vps_id ?? ""));
+      setAccountId(paired.id);
+      const psug = suggestedBalance?.(paired.id);
+      setBefore(psug != null ? String(psug) : "");
+    }
+  };
 
   const valid = Boolean(
     accountId &&
@@ -188,14 +216,7 @@ export function FundingDialog({
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">From account</Label>
-                <Select
-                  value={fromAccountId}
-                  onValueChange={(v) => {
-                    setFromAccountId(v);
-                    const sug = suggestedBalance?.(v);
-                    setFromBefore(sug != null ? String(sug) : "");
-                  }}
-                >
+                <Select value={fromAccountId} onValueChange={chooseSource}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select account..." />
                   </SelectTrigger>
@@ -230,6 +251,30 @@ export function FundingDialog({
                 Balance after withdraw:{" "}
                 <span className="font-mono">{fromAfter == null ? "—" : money(fromAfter)}</span>
               </div>
+
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Withdraw to wallet</Label>
+                <Select value={walletId} onValueChange={setWalletId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select wallet..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wallets.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
+                Wallet {wallets.find((w) => w.id === walletId)?.name ?? "—"} after withdraw:{" "}
+                <span className="font-mono">{walletNow == null ? "—" : money(walletNow)}</span>
+                <span className="mx-2">→</span>
+                <span className="font-mono font-semibold">
+                  {walletAfterWithdraw == null ? "—" : money(walletAfterWithdraw)}
+                </span>
+              </div>
             </>
           )}
 
@@ -237,21 +282,24 @@ export function FundingDialog({
             {kind === "redeposit" ? "Step 2 — deposit into another account" : "Deposit"}
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Wallet</Label>
-            <Select value={walletId} onValueChange={setWalletId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select wallet..." />
-              </SelectTrigger>
-              <SelectContent>
-                {wallets.map((w) => (
-                  <SelectItem key={w.id} value={w.id}>
-                    {w.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {kind === "deposit" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Wallet</Label>
+              <Select value={walletId} onValueChange={setWalletId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select wallet..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {wallets.map((w) => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
 
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">VPS number (to)</Label>
