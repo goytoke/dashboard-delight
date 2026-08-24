@@ -251,6 +251,30 @@ export function FundingDialog({
                 Balance after withdraw:{" "}
                 <span className="font-mono">{fromAfter == null ? "—" : money(fromAfter)}</span>
               </div>
+
+              <div className="col-span-2 space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Withdraw to wallet</Label>
+                <Select value={walletId} onValueChange={setWalletId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select wallet..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {wallets.map((w) => (
+                      <SelectItem key={w.id} value={w.id}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
+                Wallet {wallets.find((w) => w.id === walletId)?.name ?? "—"} after withdraw:{" "}
+                <span className="font-mono">{walletNow == null ? "—" : money(walletNow)}</span>
+                <span className="mx-2">→</span>
+                <span className="font-mono font-semibold">
+                  {walletAfterWithdraw == null ? "—" : money(walletAfterWithdraw)}
+                </span>
+              </div>
             </>
           )}
 
@@ -258,21 +282,24 @@ export function FundingDialog({
             {kind === "redeposit" ? "Step 2 — deposit into another account" : "Deposit"}
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Wallet</Label>
-            <Select value={walletId} onValueChange={setWalletId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select wallet..." />
-              </SelectTrigger>
-              <SelectContent>
-                {wallets.map((w) => (
-                  <SelectItem key={w.id} value={w.id}>
-                    {w.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {kind === "deposit" && (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Wallet</Label>
+              <Select value={walletId} onValueChange={setWalletId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select wallet..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {wallets.map((w) => (
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
 
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">VPS number (to)</Label>
