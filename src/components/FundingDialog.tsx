@@ -216,14 +216,7 @@ export function FundingDialog({
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">From account</Label>
-                <Select
-                  value={fromAccountId}
-                  onValueChange={(v) => {
-                    setFromAccountId(v);
-                    const sug = suggestedBalance?.(v);
-                    setFromBefore(sug != null ? String(sug) : "");
-                  }}
-                >
+                <Select value={fromAccountId} onValueChange={chooseSource}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select account..." />
                   </SelectTrigger>
