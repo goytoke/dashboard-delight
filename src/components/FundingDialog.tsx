@@ -97,9 +97,37 @@ export function FundingDialog({
   const fromAfter = fromBeforeN != null && withdrawN != null ? fromBeforeN - withdrawN : null;
 
   const walletNow = walletId ? walletBalanceOf?.(walletId) ?? null : null;
+  const walletAfterWithdraw = walletNow == null ? null : walletNow + (withdrawN ?? 0);
   const walletDelta =
     kind === "deposit" ? -(amountN ?? 0) : (withdrawN ?? 0) - (amountN ?? 0);
   const walletAfter = walletNow == null ? null : walletNow + walletDelta;
+
+  // Pick the paired account on the same VPS: the other broker (HFM <-> Rickmil).
+  const pickPaired = (sourceId: string) => {
+    const src = accounts.find((a) => a.id === sourceId);
+    if (!src) return null;
+    const sameVps = accounts.filter(
+      (a) => a.id !== sourceId && String(a.vps_id ?? "") === String(src.vps_id ?? ""),
+    );
+    return (
+      sameVps.find((a) => a.broker.toLowerCase() !== src.broker.toLowerCase()) ??
+      sameVps[0] ??
+      null
+    );
+  };
+
+  const chooseSource = (v: string) => {
+    setFromAccountId(v);
+    const sug = suggestedBalance?.(v);
+    setFromBefore(sug != null ? String(sug) : "");
+    const paired = pickPaired(v);
+    if (paired) {
+      setVpsId(String(paired.vps_id ?? ""));
+      setAccountId(paired.id);
+      const psug = suggestedBalance?.(paired.id);
+      setBefore(psug != null ? String(psug) : "");
+    }
+  };
 
   const valid = Boolean(
     accountId &&
