@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/PageHeader";
 import { ReportExport } from "@/components/ReportExport";
-import { useDeleteRow, useSaveRow, useTable, type SavedReport } from "@/lib/db";
+import { useDeleteRow, useSaveRow, useTable, useWipeAll, type SavedReport } from "@/lib/db";
 import type { Sheet } from "@/lib/export";
 
 export const Route = createFileRoute("/_authenticated/records")({
@@ -56,6 +56,7 @@ function RecordsPage() {
   const { data: reports = [] } = useTable<SavedReport>("saved_reports", "created_at", false);
   const rename = useSaveRow("saved_reports");
   const remove = useDeleteRow("saved_reports");
+  const wipe = useWipeAll();
 
   const [editing, setEditing] = useState<SavedReport | null>(null);
   const [name, setName] = useState("");
@@ -147,6 +148,28 @@ function RecordsPage() {
               ))}
             </Accordion>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6 border-destructive/40">
+        <CardHeader>
+          <CardTitle className="text-base text-destructive">Clear everything</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Removes every record you have: servers, accounts, bots, logs, costs, transfers,
+            problems, wallets and saved reports. This cannot be undone.
+          </p>
+          <Button
+            variant="destructive"
+            disabled={wipe.isPending}
+            onClick={() => {
+              if (prompt("Type DELETE to erase all your records.") === "DELETE") wipe.mutate();
+            }}
+          >
+            <Trash2 className="mr-1 h-4 w-4" />
+            {wipe.isPending ? "Deleting..." : "Delete all data"}
+          </Button>
         </CardContent>
       </Card>
 
