@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/table";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDialog, type FieldSpec } from "@/components/RecordDialog";
+import { ReportExport } from "@/components/ReportExport";
+import type { Sheet } from "@/lib/export";
 import { useDeleteRow, useSaveRow, useTable, type Bot, type Row, type Vps } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/bots")({
