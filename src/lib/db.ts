@@ -317,6 +317,41 @@ export function useDeleteRow(table: TableName, extraInvalidate: TableName[] = []
   });
 }
 
+const WIPE_ORDER: TableName[] = [
+  "saved_reports",
+  "day_results",
+  "movements",
+  "funding_events",
+  "daily_logs",
+  "transactions",
+  "costs",
+  "problems",
+  "bots",
+  "accounts",
+  "vps",
+  "people",
+  "payment_sources",
+  "cost_purposes",
+];
+
+export function useWipeAll() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const uid = await currentUserId();
+      for (const table of WIPE_ORDER) {
+        const { error } = await supabase.from(table).delete().eq("user_id", uid);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries();
+      toast.success("All records deleted");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
 export const money = (v: unknown) =>
   v === null || v === undefined || v === "" ? "—" : `$${Number(v).toFixed(2)}`;
 

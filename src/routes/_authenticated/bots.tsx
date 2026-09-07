@@ -75,6 +75,25 @@ function BotsPage() {
 
   const generate = () => setDraft(randomMagic(taken));
 
+  const sheet = (title: string, rows: Bot[]): Sheet => ({
+    title,
+    columns: ["Username", "Magic number", "Email", "Password", "VPS", "Status", "Notes"],
+    rows: rows.map((b) => [
+      b.username ?? "—",
+      b.magic_number,
+      b.email ?? "—",
+      b.password ?? "—",
+      servers.find((v) => v.id === b.vps_id)?.name ?? "—",
+      b.status === "registered" ? "Registered" : "Generated (not used)",
+      b.notes ?? "—",
+    ]),
+  });
+
+  const exportSheets: Sheet[] = [
+    sheet("Registered bots", registered),
+    sheet("Generated, waiting", pending),
+  ];
+
   const copyDraft = () => {
     if (!draft) return;
     void navigator.clipboard.writeText(String(draft));
@@ -153,14 +172,24 @@ function BotsPage() {
         title="Bot Manager"
         subtitle="Registered bots and a generator that never reuses a username or magic number."
         actions={
-          <Button
-            onClick={() => {
-              setEditing({ status: "registered", magic_number: randomMagic(taken) });
-              setOpen(true);
-            }}
-          >
-            <Plus className="mr-1 h-4 w-4" /> Register bot
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <ReportExport
+              heading="Bot Manager"
+              fileBase="bot-manager"
+              sheets={exportSheets}
+              theory={[
+                `${registered.length} registered bots, ${pending.length} magic numbers reserved and not used yet.`,
+              ]}
+            />
+            <Button
+              onClick={() => {
+                setEditing({ status: "registered", magic_number: randomMagic(taken) });
+                setOpen(true);
+              }}
+            >
+              <Plus className="mr-1 h-4 w-4" /> Register bot
+            </Button>
+          </div>
         }
       />
 
