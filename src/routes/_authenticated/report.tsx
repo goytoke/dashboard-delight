@@ -340,6 +340,7 @@ function ReportPage() {
         data={periodData}
         moneyCtx={moneyCtx}
         dayResults={dayResults}
+        vpsList={vpsList}
       />
 
       <PeriodReport
