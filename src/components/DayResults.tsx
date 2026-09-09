@@ -147,7 +147,6 @@ export function DayResults({
                 {vpsList.map((v) => (
                   <SelectItem key={v.id} value={v.id}>
                     {v.name}
-                    {v.vps_number ? ` · ${v.vps_number}` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
