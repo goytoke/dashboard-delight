@@ -43,6 +43,7 @@ export function PeriodReport({
   data,
   moneyCtx,
   dayResults,
+  vpsList = [],
 }: {
   kind: ReportKind;
   title: string;
