@@ -520,7 +520,7 @@ function ReportPage() {
                 return (
                   <TableRow key={r.id}>
                     <TableCell>{vpsList.find((v) => v.id === r.vps_id)?.name ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{r.register_number ?? "—"}</TableCell>
+                    
                     <TableCell>{r.label ?? "—"}</TableCell>
                     <TableCell className="text-right font-mono">
                       <span className={signed >= 0 ? "text-primary" : "text-destructive"}>
