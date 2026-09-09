@@ -503,15 +503,14 @@ function ReportPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>VPS</TableHead>
-                <TableHead>Register number</TableHead>
                 <TableHead>Label</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Net P/L</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {dayResultRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
                     No profit or loss was recorded on this date.
                   </TableCell>
                 </TableRow>
