@@ -53,7 +53,9 @@ export function PeriodReport({
   data: WeekData;
   moneyCtx: MoneyContext;
   dayResults: DayResult[];
+  vpsList?: Vps[];
 }) {
+  const vpsName = (id: string | null) => vpsList.find((v) => v.id === id)?.name ?? "—";
   const [rangeFrom, setRangeFrom] = useState(from);
   const [rangeTo, setRangeTo] = useState(to);
   const [report, setReport] = useState<WeekReport | null>(null);
