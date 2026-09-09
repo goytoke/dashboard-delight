@@ -203,15 +203,14 @@ function ReportPage() {
     incomeExpenseSheet(date, ie, totals.grandOpening),
     {
       title: `Profit / loss recorded — ${date}`,
-      columns: ["VPS", "Register number", "Label", "Amount"],
+      columns: ["VPS", "Label", "Net P/L"],
       rows: dayResultRows.length
         ? dayResultRows.map((r) => [
             vpsList.find((v) => v.id === r.vps_id)?.name ?? "",
-            r.register_number ?? "",
             r.label ?? "",
             r.direction === "loss" ? -Number(r.amount) : Number(r.amount),
           ])
-        : [["No profit or loss was recorded on this date.", "", "", ""]],
+        : [["No profit or loss was recorded on this date.", "", ""]],
     },
     ...statusSheets(date, status, problems),
     {
