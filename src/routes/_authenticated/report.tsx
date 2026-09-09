@@ -203,15 +203,14 @@ function ReportPage() {
     incomeExpenseSheet(date, ie, totals.grandOpening),
     {
       title: `Profit / loss recorded — ${date}`,
-      columns: ["VPS", "Register number", "Label", "Amount"],
+      columns: ["VPS", "Label", "Net P/L"],
       rows: dayResultRows.length
         ? dayResultRows.map((r) => [
             vpsList.find((v) => v.id === r.vps_id)?.name ?? "",
-            r.register_number ?? "",
             r.label ?? "",
             r.direction === "loss" ? -Number(r.amount) : Number(r.amount),
           ])
-        : [["No profit or loss was recorded on this date.", "", "", ""]],
+        : [["No profit or loss was recorded on this date.", "", ""]],
     },
     ...statusSheets(date, status, problems),
     {
@@ -341,6 +340,7 @@ function ReportPage() {
         data={periodData}
         moneyCtx={moneyCtx}
         dayResults={dayResults}
+        vpsList={vpsList}
       />
 
       <PeriodReport
@@ -352,6 +352,7 @@ function ReportPage() {
         data={periodData}
         moneyCtx={moneyCtx}
         dayResults={dayResults}
+        vpsList={vpsList}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -504,15 +505,14 @@ function ReportPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>VPS</TableHead>
-                <TableHead>Register number</TableHead>
                 <TableHead>Label</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
+                <TableHead className="text-right">Net P/L</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {dayResultRows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
                     No profit or loss was recorded on this date.
                   </TableCell>
                 </TableRow>
@@ -522,7 +522,7 @@ function ReportPage() {
                 return (
                   <TableRow key={r.id}>
                     <TableCell>{vpsList.find((v) => v.id === r.vps_id)?.name ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{r.register_number ?? "—"}</TableCell>
+                    
                     <TableCell>{r.label ?? "—"}</TableCell>
                     <TableCell className="text-right font-mono">
                       <span className={signed >= 0 ? "text-primary" : "text-destructive"}>

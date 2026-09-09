@@ -16,7 +16,7 @@ import {
 import { ReportExport } from "@/components/ReportExport";
 import { SaveReportDialog, type ReportKind } from "@/components/SaveReportDialog";
 import { computeWeek, type WeekData, type WeekReport } from "@/lib/week";
-import { money, type DayResult } from "@/lib/db";
+import { money, type DayResult, type Vps } from "@/lib/db";
 import { resultsNetOf } from "@/components/DayResults";
 import type { Sheet } from "@/lib/export";
 import {
@@ -43,6 +43,7 @@ export function PeriodReport({
   data,
   moneyCtx,
   dayResults,
+  vpsList = [],
 }: {
   kind: ReportKind;
   title: string;
@@ -52,7 +53,9 @@ export function PeriodReport({
   data: WeekData;
   moneyCtx: MoneyContext;
   dayResults: DayResult[];
+  vpsList?: Vps[];
 }) {
+  const vpsName = (id: string | null) => vpsList.find((v) => v.id === id)?.name ?? "—";
   const [rangeFrom, setRangeFrom] = useState(from);
   const [rangeTo, setRangeTo] = useState(to);
   const [report, setReport] = useState<WeekReport | null>(null);
@@ -116,11 +119,11 @@ export function PeriodReport({
           incomeExpenseSheet(periodLabel, ie, report.firstOpening),
           {
             title: `Profit / loss records — ${periodLabel}`,
-            columns: ["Date", "Register number", "Label", "Amount"],
+            columns: ["Date", "VPS", "Label", "Net P/L"],
             rows: results.length
               ? results.map((r) => [
                   r.result_date,
-                  r.register_number ?? "",
+                  vpsName(r.vps_id),
                   r.label ?? "",
                   r.direction === "loss" ? -Number(r.amount) : Number(r.amount),
                 ])
