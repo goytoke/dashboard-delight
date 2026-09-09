@@ -16,7 +16,7 @@ import {
 import { ReportExport } from "@/components/ReportExport";
 import { SaveReportDialog, type ReportKind } from "@/components/SaveReportDialog";
 import { computeWeek, type WeekData, type WeekReport } from "@/lib/week";
-import { money, type DayResult } from "@/lib/db";
+import { money, type DayResult, type Vps } from "@/lib/db";
 import { resultsNetOf } from "@/components/DayResults";
 import type { Sheet } from "@/lib/export";
 import {
