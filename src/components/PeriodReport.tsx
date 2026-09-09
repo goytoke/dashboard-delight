@@ -116,11 +116,11 @@ export function PeriodReport({
           incomeExpenseSheet(periodLabel, ie, report.firstOpening),
           {
             title: `Profit / loss records — ${periodLabel}`,
-            columns: ["Date", "Register number", "Label", "Amount"],
+            columns: ["Date", "VPS", "Label", "Net P/L"],
             rows: results.length
               ? results.map((r) => [
                   r.result_date,
-                  r.register_number ?? "",
+                  vpsName(r.vps_id),
                   r.label ?? "",
                   r.direction === "loss" ? -Number(r.amount) : Number(r.amount),
                 ])
