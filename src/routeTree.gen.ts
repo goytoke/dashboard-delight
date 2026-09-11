@@ -20,6 +20,7 @@ import { Route as AuthenticatedMovementsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedProblemsRouteImport } from './routes/_authenticated/problems'
 import { Route as AuthenticatedRecordsRouteImport } from './routes/_authenticated/records'
 import { Route as AuthenticatedReportRouteImport } from './routes/_authenticated/report'
+import { Route as AuthenticatedSummaryRouteImport } from './routes/_authenticated/summary'
 import { Route as AuthenticatedTransfersRouteImport } from './routes/_authenticated/transfers'
 import { Route as AuthenticatedVpsRouteImport } from './routes/_authenticated/vps'
 
@@ -77,6 +78,11 @@ const AuthenticatedReportRoute = AuthenticatedReportRouteImport.update({
   path: '/report',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSummaryRoute = AuthenticatedSummaryRouteImport.update({
+  id: '/summary',
+  path: '/summary',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedTransfersRoute = AuthenticatedTransfersRouteImport.update({
   id: '/transfers',
   path: '/transfers',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/problems': typeof AuthenticatedProblemsRoute
   '/records': typeof AuthenticatedRecordsRoute
   '/report': typeof AuthenticatedReportRoute
+  '/summary': typeof AuthenticatedSummaryRoute
   '/transfers': typeof AuthenticatedTransfersRoute
   '/vps': typeof AuthenticatedVpsRoute
 }
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/problems': typeof AuthenticatedProblemsRoute
   '/records': typeof AuthenticatedRecordsRoute
   '/report': typeof AuthenticatedReportRoute
+  '/summary': typeof AuthenticatedSummaryRoute
   '/transfers': typeof AuthenticatedTransfersRoute
   '/vps': typeof AuthenticatedVpsRoute
   '/': typeof AuthenticatedIndexRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/_authenticated/problems': typeof AuthenticatedProblemsRoute
   '/_authenticated/records': typeof AuthenticatedRecordsRoute
   '/_authenticated/report': typeof AuthenticatedReportRoute
+  '/_authenticated/summary': typeof AuthenticatedSummaryRoute
   '/_authenticated/transfers': typeof AuthenticatedTransfersRoute
   '/_authenticated/vps': typeof AuthenticatedVpsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/problems'
     | '/records'
     | '/report'
+    | '/summary'
     | '/transfers'
     | '/vps'
   fileRoutesByTo: FileRoutesByTo
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/problems'
     | '/records'
     | '/report'
+    | '/summary'
     | '/transfers'
     | '/vps'
     | '/'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/_authenticated/problems'
     | '/_authenticated/records'
     | '/_authenticated/report'
+    | '/_authenticated/summary'
     | '/_authenticated/transfers'
     | '/_authenticated/vps'
     | '/_authenticated/'
@@ -262,6 +274,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/summary': {
+      id: '/_authenticated/summary'
+      path: '/summary'
+      fullPath: '/summary'
+      preLoaderRoute: typeof AuthenticatedSummaryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/transfers': {
       id: '/_authenticated/transfers'
       path: '/transfers'
@@ -288,6 +307,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProblemsRoute: typeof AuthenticatedProblemsRoute
   AuthenticatedRecordsRoute: typeof AuthenticatedRecordsRoute
   AuthenticatedReportRoute: typeof AuthenticatedReportRoute
+  AuthenticatedSummaryRoute: typeof AuthenticatedSummaryRoute
   AuthenticatedTransfersRoute: typeof AuthenticatedTransfersRoute
   AuthenticatedVpsRoute: typeof AuthenticatedVpsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -302,6 +322,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProblemsRoute: AuthenticatedProblemsRoute,
   AuthenticatedRecordsRoute: AuthenticatedRecordsRoute,
   AuthenticatedReportRoute: AuthenticatedReportRoute,
+  AuthenticatedSummaryRoute: AuthenticatedSummaryRoute,
   AuthenticatedTransfersRoute: AuthenticatedTransfersRoute,
   AuthenticatedVpsRoute: AuthenticatedVpsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Shuffle,
   FolderClock,
+  CalendarRange,
   LogOut,
 } from "lucide-react";
 import {
@@ -38,6 +39,7 @@ const items = [
   { title: "Movements", url: "/movements", icon: Shuffle },
   { title: "Problems", url: "/problems", icon: AlertTriangle },
   { title: "Report", url: "/report", icon: BarChart3 },
+  { title: "Summary", url: "/summary", icon: CalendarRange },
   { title: "Records", url: "/records", icon: FolderClock },
 ] as const;
 
