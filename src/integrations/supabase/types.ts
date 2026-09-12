@@ -481,6 +481,45 @@ export type Database = {
           },
         ]
       }
+      notes: {
+        Row: {
+          author_id: string
+          body: string | null
+          created_at: string
+          deadline: string | null
+          done: boolean
+          id: string
+          is_todo: boolean
+          progress: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body?: string | null
+          created_at?: string
+          deadline?: string | null
+          done?: boolean
+          id?: string
+          is_todo?: boolean
+          progress?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string | null
+          created_at?: string
+          deadline?: string | null
+          done?: boolean
+          id?: string
+          is_todo?: boolean
+          progress?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_sources: {
         Row: {
           created_at: string
@@ -739,6 +778,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       vps: {
         Row: {
           created_at: string
@@ -795,10 +855,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -925,6 +991,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "owner"],
+    },
   },
 } as const
