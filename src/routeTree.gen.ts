@@ -13,10 +13,12 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedBotsRouteImport } from './routes/_authenticated/bots'
 import { Route as AuthenticatedCostsRouteImport } from './routes/_authenticated/costs'
 import { Route as AuthenticatedDailyLogRouteImport } from './routes/_authenticated/daily-log'
 import { Route as AuthenticatedMovementsRouteImport } from './routes/_authenticated/movements'
+import { Route as AuthenticatedNotesRouteImport } from './routes/_authenticated/notes'
 import { Route as AuthenticatedProblemsRouteImport } from './routes/_authenticated/problems'
 import { Route as AuthenticatedRecordsRouteImport } from './routes/_authenticated/records'
 import { Route as AuthenticatedReportRouteImport } from './routes/_authenticated/report'
@@ -43,6 +45,11 @@ const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
   path: '/accounts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBotsRoute = AuthenticatedBotsRouteImport.update({
   id: '/bots',
   path: '/bots',
@@ -61,6 +68,11 @@ const AuthenticatedDailyLogRoute = AuthenticatedDailyLogRouteImport.update({
 const AuthenticatedMovementsRoute = AuthenticatedMovementsRouteImport.update({
   id: '/movements',
   path: '/movements',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotesRoute = AuthenticatedNotesRouteImport.update({
+  id: '/notes',
+  path: '/notes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProblemsRoute = AuthenticatedProblemsRouteImport.update({
@@ -98,10 +110,12 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
   '/accounts': typeof AuthenticatedAccountsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/bots': typeof AuthenticatedBotsRoute
   '/costs': typeof AuthenticatedCostsRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/movements': typeof AuthenticatedMovementsRoute
+  '/notes': typeof AuthenticatedNotesRoute
   '/problems': typeof AuthenticatedProblemsRoute
   '/records': typeof AuthenticatedRecordsRoute
   '/report': typeof AuthenticatedReportRoute
@@ -112,10 +126,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/accounts': typeof AuthenticatedAccountsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/bots': typeof AuthenticatedBotsRoute
   '/costs': typeof AuthenticatedCostsRoute
   '/daily-log': typeof AuthenticatedDailyLogRoute
   '/movements': typeof AuthenticatedMovementsRoute
+  '/notes': typeof AuthenticatedNotesRoute
   '/problems': typeof AuthenticatedProblemsRoute
   '/records': typeof AuthenticatedRecordsRoute
   '/report': typeof AuthenticatedReportRoute
@@ -129,10 +145,12 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/bots': typeof AuthenticatedBotsRoute
   '/_authenticated/costs': typeof AuthenticatedCostsRoute
   '/_authenticated/daily-log': typeof AuthenticatedDailyLogRoute
   '/_authenticated/movements': typeof AuthenticatedMovementsRoute
+  '/_authenticated/notes': typeof AuthenticatedNotesRoute
   '/_authenticated/problems': typeof AuthenticatedProblemsRoute
   '/_authenticated/records': typeof AuthenticatedRecordsRoute
   '/_authenticated/report': typeof AuthenticatedReportRoute
@@ -147,10 +165,12 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/accounts'
+    | '/admin'
     | '/bots'
     | '/costs'
     | '/daily-log'
     | '/movements'
+    | '/notes'
     | '/problems'
     | '/records'
     | '/report'
@@ -161,10 +181,12 @@ export interface FileRouteTypes {
   to:
     | '/auth'
     | '/accounts'
+    | '/admin'
     | '/bots'
     | '/costs'
     | '/daily-log'
     | '/movements'
+    | '/notes'
     | '/problems'
     | '/records'
     | '/report'
@@ -177,10 +199,12 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/accounts'
+    | '/_authenticated/admin'
     | '/_authenticated/bots'
     | '/_authenticated/costs'
     | '/_authenticated/daily-log'
     | '/_authenticated/movements'
+    | '/_authenticated/notes'
     | '/_authenticated/problems'
     | '/_authenticated/records'
     | '/_authenticated/report'
@@ -225,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bots': {
       id: '/_authenticated/bots'
       path: '/bots'
@@ -251,6 +282,13 @@ declare module '@tanstack/react-router' {
       path: '/movements'
       fullPath: '/movements'
       preLoaderRoute: typeof AuthenticatedMovementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notes': {
+      id: '/_authenticated/notes'
+      path: '/notes'
+      fullPath: '/notes'
+      preLoaderRoute: typeof AuthenticatedNotesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/problems': {
@@ -300,10 +338,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBotsRoute: typeof AuthenticatedBotsRoute
   AuthenticatedCostsRoute: typeof AuthenticatedCostsRoute
   AuthenticatedDailyLogRoute: typeof AuthenticatedDailyLogRoute
   AuthenticatedMovementsRoute: typeof AuthenticatedMovementsRoute
+  AuthenticatedNotesRoute: typeof AuthenticatedNotesRoute
   AuthenticatedProblemsRoute: typeof AuthenticatedProblemsRoute
   AuthenticatedRecordsRoute: typeof AuthenticatedRecordsRoute
   AuthenticatedReportRoute: typeof AuthenticatedReportRoute
@@ -315,10 +355,12 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBotsRoute: AuthenticatedBotsRoute,
   AuthenticatedCostsRoute: AuthenticatedCostsRoute,
   AuthenticatedDailyLogRoute: AuthenticatedDailyLogRoute,
   AuthenticatedMovementsRoute: AuthenticatedMovementsRoute,
+  AuthenticatedNotesRoute: AuthenticatedNotesRoute,
   AuthenticatedProblemsRoute: AuthenticatedProblemsRoute,
   AuthenticatedRecordsRoute: AuthenticatedRecordsRoute,
   AuthenticatedReportRoute: AuthenticatedReportRoute,
