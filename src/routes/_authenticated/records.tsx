@@ -90,7 +90,7 @@ function RecordsPage() {
     <div>
       <PageHeader
         title="Report records"
-        subtitle="Saved reports from the biggest period down: monthly, then weekly, then daily."
+        subtitle="Grouped by month. Open a month to find its monthly summary, then its weekly reports, then the daily ones."
       />
 
       <Card>
