@@ -29,6 +29,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/lib/notes";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
