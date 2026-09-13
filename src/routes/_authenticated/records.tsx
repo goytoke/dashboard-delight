@@ -68,16 +68,23 @@ function RecordsPage() {
   const [editing, setEditing] = useState<SavedReport | null>(null);
   const [name, setName] = useState("");
 
-  const grouped = useMemo(
-    () =>
-      KINDS.map((k) => ({
+  const months = useMemo(() => {
+    const keys = Array.from(new Set(reports.map((r) => monthKey(r.from_date)))).sort((a, b) =>
+      a < b ? 1 : -1,
+    );
+    return keys.map((key) => ({
+      key,
+      label: monthLabel(key),
+      count: reports.filter((r) => monthKey(r.from_date) === key).length,
+      kinds: KINDS.map((k) => ({
         ...k,
         items: reports
-          .filter((r) => r.kind === k.key)
+          .filter((r) => monthKey(r.from_date) === key && r.kind === k.key)
           .sort((a, b) => (a.from_date < b.from_date ? 1 : -1)),
       })),
-    [reports],
-  );
+    }));
+  }, [reports]);
+
 
   return (
     <div>
