@@ -103,60 +103,73 @@ function RecordsPage() {
               No report saved yet. Generate one on the Report page and press “Save report”.
             </p>
           ) : (
-            <Accordion type="multiple" defaultValue={["monthly", "weekly", "daily"]}>
-              {grouped.map((g) => (
-                <AccordionItem key={g.key} value={g.key}>
+            <Accordion type="multiple" defaultValue={[months[0]?.key ?? ""]}>
+              {months.map((m) => (
+                <AccordionItem key={m.key} value={m.key}>
                   <AccordionTrigger>
-                    {g.label} ({g.items.length})
+                    {m.label} ({m.count})
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-3">
-                    {g.items.length === 0 && (
-                      <p className="text-sm text-muted-foreground">Nothing saved in this group.</p>
-                    )}
-                    {g.items.map((r) => (
-                      <div
-                        key={r.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3"
-                      >
-                        <div>
-                          <div className="font-medium">{r.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {r.from_date} → {r.to_date} · saved{" "}
-                            {new Date(r.created_at).toLocaleString()}
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline">{r.kind}</Badge>
-                          <ReportExport
-                            heading={r.heading}
-                            fileBase={r.name.replace(/[^\w-]+/g, "-").toLowerCase()}
-                            sheets={(r.sheets ?? []) as Sheet[]}
-                            theory={(r.theory ?? []) as string[]}
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            aria-label="Rename report"
-                            onClick={() => {
-                              setEditing(r);
-                              setName(r.name);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            aria-label="Delete report"
-                            onClick={() => {
-                              if (confirm(`Delete “${r.name}”?`)) remove.mutate(r.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                  <AccordionContent>
+                    <Accordion type="multiple" className="pl-2">
+                      {m.kinds.map((g) => (
+                        <AccordionItem key={g.key} value={`${m.key}-${g.key}`}>
+                          <AccordionTrigger className="text-sm">
+                            {g.label} ({g.items.length})
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-3">
+                            {g.items.length === 0 && (
+                              <p className="text-sm text-muted-foreground">
+                                Nothing saved in this group for {m.label}.
+                              </p>
+                            )}
+                            {g.items.map((r) => (
+                              <div
+                                key={r.id}
+                                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3"
+                              >
+                                <div>
+                                  <div className="font-medium">{r.name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {r.from_date} → {r.to_date} · saved{" "}
+                                    {new Date(r.created_at).toLocaleString()}
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline">{r.kind}</Badge>
+                                  <ReportExport
+                                    heading={r.heading}
+                                    fileBase={r.name.replace(/[^\w-]+/g, "-").toLowerCase()}
+                                    sheets={(r.sheets ?? []) as Sheet[]}
+                                    theory={(r.theory ?? []) as string[]}
+                                  />
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label="Rename report"
+                                    onClick={() => {
+                                      setEditing(r);
+                                      setName(r.name);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label="Delete report"
+                                    onClick={() => {
+                                      if (confirm(`Delete “${r.name}”?`)) remove.mutate(r.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
                   </AccordionContent>
                 </AccordionItem>
               ))}
