@@ -19,6 +19,7 @@ import { computeWeek, type WeekData, type WeekReport } from "@/lib/week";
 import { money, type DayResult, type Vps } from "@/lib/db";
 import { resultsNetOf } from "@/components/DayResults";
 import type { Sheet } from "@/lib/export";
+import { inventorySheets, type InventoryData } from "@/lib/report-inventory";
 import {
   incomeExpense,
   incomeExpenseSheet,
@@ -44,6 +45,7 @@ export function PeriodReport({
   moneyCtx,
   dayResults,
   vpsList = [],
+  inventory,
 }: {
   kind: ReportKind;
   title: string;
@@ -54,6 +56,7 @@ export function PeriodReport({
   moneyCtx: MoneyContext;
   dayResults: DayResult[];
   vpsList?: Vps[];
+  inventory?: InventoryData;
 }) {
   const vpsName = (id: string | null) => vpsList.find((v) => v.id === id)?.name ?? "—";
   const [rangeFrom, setRangeFrom] = useState(from);
@@ -152,6 +155,7 @@ export function PeriodReport({
             ],
           },
           ...moneySheets(label.from, label.to, periodLabel, moneyCtx),
+          ...(inventory ? inventorySheets(label.to, periodLabel, inventory) : []),
         ]
       : [];
 
