@@ -13,7 +13,8 @@ export function latestBalance(accountId: string, asOf: string, logs: DailyLog[])
   const rows = logs
     .filter((l) => l.account_id === accountId && l.log_date <= asOf && l.closing_balance != null)
     .sort((a, b) => (a.log_date < b.log_date ? 1 : -1));
-  return rows.length ? Number(rows[0].closing_balance) : null;
+  const first = rows[0];
+  return first ? Number(first.closing_balance) : null;
 }
 
 /**
