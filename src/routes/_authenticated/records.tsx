@@ -47,10 +47,17 @@ export const Route = createFileRoute("/_authenticated/records")({
 });
 
 const KINDS = [
-  { key: "monthly", label: "Monthly reports" },
+  { key: "monthly", label: "Monthly summary" },
   { key: "weekly", label: "Weekly reports" },
   { key: "daily", label: "Daily reports" },
 ] as const;
+
+const monthKey = (d: string) => d.slice(0, 7);
+const monthLabel = (key: string) =>
+  new Date(`${key}-01T00:00:00`).toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
 
 function RecordsPage() {
   const { data: reports = [] } = useTable<SavedReport>("saved_reports", "created_at", false);
@@ -61,22 +68,29 @@ function RecordsPage() {
   const [editing, setEditing] = useState<SavedReport | null>(null);
   const [name, setName] = useState("");
 
-  const grouped = useMemo(
-    () =>
-      KINDS.map((k) => ({
+  const months = useMemo(() => {
+    const keys = Array.from(new Set(reports.map((r) => monthKey(r.from_date)))).sort((a, b) =>
+      a < b ? 1 : -1,
+    );
+    return keys.map((key) => ({
+      key,
+      label: monthLabel(key),
+      count: reports.filter((r) => monthKey(r.from_date) === key).length,
+      kinds: KINDS.map((k) => ({
         ...k,
         items: reports
-          .filter((r) => r.kind === k.key)
+          .filter((r) => monthKey(r.from_date) === key && r.kind === k.key)
           .sort((a, b) => (a.from_date < b.from_date ? 1 : -1)),
       })),
-    [reports],
-  );
+    }));
+  }, [reports]);
+
 
   return (
     <div>
       <PageHeader
         title="Report records"
-        subtitle="Saved reports from the biggest period down: monthly, then weekly, then daily."
+        subtitle="Grouped by month. Open a month to find its monthly summary, then its weekly reports, then the daily ones."
       />
 
       <Card>
@@ -89,60 +103,73 @@ function RecordsPage() {
               No report saved yet. Generate one on the Report page and press “Save report”.
             </p>
           ) : (
-            <Accordion type="multiple" defaultValue={["monthly", "weekly", "daily"]}>
-              {grouped.map((g) => (
-                <AccordionItem key={g.key} value={g.key}>
+            <Accordion type="multiple" defaultValue={[months[0]?.key ?? ""]}>
+              {months.map((m) => (
+                <AccordionItem key={m.key} value={m.key}>
                   <AccordionTrigger>
-                    {g.label} ({g.items.length})
+                    {m.label} ({m.count})
                   </AccordionTrigger>
-                  <AccordionContent className="space-y-3">
-                    {g.items.length === 0 && (
-                      <p className="text-sm text-muted-foreground">Nothing saved in this group.</p>
-                    )}
-                    {g.items.map((r) => (
-                      <div
-                        key={r.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3"
-                      >
-                        <div>
-                          <div className="font-medium">{r.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {r.from_date} → {r.to_date} · saved{" "}
-                            {new Date(r.created_at).toLocaleString()}
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant="outline">{r.kind}</Badge>
-                          <ReportExport
-                            heading={r.heading}
-                            fileBase={r.name.replace(/[^\w-]+/g, "-").toLowerCase()}
-                            sheets={(r.sheets ?? []) as Sheet[]}
-                            theory={(r.theory ?? []) as string[]}
-                          />
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            aria-label="Rename report"
-                            onClick={() => {
-                              setEditing(r);
-                              setName(r.name);
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            aria-label="Delete report"
-                            onClick={() => {
-                              if (confirm(`Delete “${r.name}”?`)) remove.mutate(r.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                  <AccordionContent>
+                    <Accordion type="multiple" className="pl-2">
+                      {m.kinds.map((g) => (
+                        <AccordionItem key={g.key} value={`${m.key}-${g.key}`}>
+                          <AccordionTrigger className="text-sm">
+                            {g.label} ({g.items.length})
+                          </AccordionTrigger>
+                          <AccordionContent className="space-y-3">
+                            {g.items.length === 0 && (
+                              <p className="text-sm text-muted-foreground">
+                                Nothing saved in this group for {m.label}.
+                              </p>
+                            )}
+                            {g.items.map((r) => (
+                              <div
+                                key={r.id}
+                                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border p-3"
+                              >
+                                <div>
+                                  <div className="font-medium">{r.name}</div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {r.from_date} → {r.to_date} · saved{" "}
+                                    {new Date(r.created_at).toLocaleString()}
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Badge variant="outline">{r.kind}</Badge>
+                                  <ReportExport
+                                    heading={r.heading}
+                                    fileBase={r.name.replace(/[^\w-]+/g, "-").toLowerCase()}
+                                    sheets={(r.sheets ?? []) as Sheet[]}
+                                    theory={(r.theory ?? []) as string[]}
+                                  />
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label="Rename report"
+                                    onClick={() => {
+                                      setEditing(r);
+                                      setName(r.name);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label="Delete report"
+                                    onClick={() => {
+                                      if (confirm(`Delete “${r.name}”?`)) remove.mutate(r.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
                   </AccordionContent>
                 </AccordionItem>
               ))}

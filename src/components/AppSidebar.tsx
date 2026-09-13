@@ -12,6 +12,8 @@ import {
   Shuffle,
   FolderClock,
   CalendarRange,
+  StickyNote,
+  ShieldCheck,
   LogOut,
 } from "lucide-react";
 import {
@@ -27,6 +29,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsAdmin } from "@/lib/notes";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -41,10 +44,12 @@ const items = [
   { title: "Report", url: "/report", icon: BarChart3 },
   { title: "Summary", url: "/summary", icon: CalendarRange },
   { title: "Records", url: "/records", icon: FolderClock },
+  { title: "Notes & To-do", url: "/notes", icon: StickyNote },
 ] as const;
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const { data: isAdmin = false } = useIsAdmin();
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
 
   const signOut = async () => {
@@ -80,6 +85,16 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {isAdmin ? (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={currentPath.startsWith("/admin")}>
+                    <Link to="/admin" className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Admin overview</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ) : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

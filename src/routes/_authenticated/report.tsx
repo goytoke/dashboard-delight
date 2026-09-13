@@ -35,6 +35,7 @@ import {
   type MoneyContext,
 } from "@/lib/report-sections";
 import { statusRows, statusSheets, statusText } from "@/lib/report-status";
+import { inventorySheets } from "@/lib/report-inventory";
 import { useDeadlineConfig } from "@/lib/settings";
 
 import {
@@ -42,6 +43,7 @@ import {
   today,
   useTable,
   type Account,
+  type Bot,
   type Cost,
   type DailyLog,
   type DayResult,
@@ -86,6 +88,7 @@ function ReportPage() {
   const { data: problems = [] } = useTable<Problem>("problems");
   const { data: wallets = [] } = useTable<Named>("payment_sources", "name", true);
   const { data: vpsList = [] } = useTable<Vps>("vps", "vps_number", true);
+  const { data: bots = [] } = useTable<Bot>("bots");
 
   const { data: dayResults = [] } = useTable<DayResult>("day_results", "created_at", false);
 
@@ -255,6 +258,7 @@ function ReportPage() {
       }),
     },
     ...moneySheets(date, date, date, moneyCtx),
+    ...inventorySheets(date, date, { vpsList, accounts, bots, logs }),
     {
       title: "Subscriptions & deadlines",
       columns: ["Purpose", "Details", "Amount", "Started", "Deadline", "Time left"],
@@ -341,6 +345,7 @@ function ReportPage() {
         moneyCtx={moneyCtx}
         dayResults={dayResults}
         vpsList={vpsList}
+        inventory={{ vpsList, accounts, bots, logs }}
       />
 
       <PeriodReport
@@ -353,6 +358,7 @@ function ReportPage() {
         moneyCtx={moneyCtx}
         dayResults={dayResults}
         vpsList={vpsList}
+        inventory={{ vpsList, accounts, bots, logs }}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
