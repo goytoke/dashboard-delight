@@ -49,6 +49,17 @@ import {
 } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/")({
+  beforeLoad: async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) return;
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (data) throw redirect({ to: "/admin" });
+  },
   head: () => ({
     meta: [
       { title: "Dashboard — Bot Ops Tracker" },
