@@ -12,6 +12,8 @@ import {
   Shuffle,
   FolderClock,
   CalendarRange,
+  StickyNote,
+  ShieldCheck,
   LogOut,
 } from "lucide-react";
 import {
