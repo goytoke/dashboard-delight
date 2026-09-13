@@ -47,10 +47,17 @@ export const Route = createFileRoute("/_authenticated/records")({
 });
 
 const KINDS = [
-  { key: "monthly", label: "Monthly reports" },
+  { key: "monthly", label: "Monthly summary" },
   { key: "weekly", label: "Weekly reports" },
   { key: "daily", label: "Daily reports" },
 ] as const;
+
+const monthKey = (d: string) => d.slice(0, 7);
+const monthLabel = (key: string) =>
+  new Date(`${key}-01T00:00:00`).toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
 
 function RecordsPage() {
   const { data: reports = [] } = useTable<SavedReport>("saved_reports", "created_at", false);
