@@ -44,10 +44,12 @@ const items = [
   { title: "Report", url: "/report", icon: BarChart3 },
   { title: "Summary", url: "/summary", icon: CalendarRange },
   { title: "Records", url: "/records", icon: FolderClock },
+  { title: "Notes & To-do", url: "/notes", icon: StickyNote },
 ] as const;
 
 export function AppSidebar() {
   const navigate = useNavigate();
+  const { data: isAdmin = false } = useIsAdmin();
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
 
   const signOut = async () => {
