@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Trash2, ListTodo, ShieldPlus, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, ListTodo, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,15 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { PageHeader } from "@/components/PageHeader";
 import { useDeleteNote, useNotes, useSaveNote, type Note } from "@/lib/notes";
-import { createAdminUser } from "@/lib/admin.functions";
 import { today } from "@/lib/db";
 
 export const Route = createFileRoute("/_authenticated/notes")({
@@ -50,9 +43,6 @@ function NotesPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
 
-  const [adminUser, setAdminUser] = useState("");
-  const [adminPass, setAdminPass] = useState("");
-  const [creating, setCreating] = useState(false);
 
   const todos = useMemo(() => notes.filter((n) => n.is_todo), [notes]);
   const plain = useMemo(() => notes.filter((n) => !n.is_todo), [notes]);
@@ -76,24 +66,6 @@ function NotesPage() {
     );
   };
 
-  const makeAdmin = async () => {
-    if (!adminUser.trim() || adminPass.length < 6) {
-      toast.error("Enter a username and a password of at least 6 characters.");
-      return;
-    }
-    setCreating(true);
-    try {
-      const res = await createAdminUser({
-        data: { username: adminUser, password: adminPass },
-      });
-      toast.success(`Admin "${res.username}" can now log in.`);
-      setAdminUser("");
-      setAdminPass("");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not create the admin user");
-    }
-    setCreating(false);
-  };
 
   return (
     <div className="space-y-6">
