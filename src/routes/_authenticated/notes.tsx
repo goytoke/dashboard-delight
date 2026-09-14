@@ -187,42 +187,9 @@ function NotesPage() {
         </CardContent>
       </Card>
 
-      <Accordion type="single" collapsible>
-        <AccordionItem value="admin">
-          <AccordionTrigger>
-            <span className="flex items-center gap-2">
-              <ShieldPlus className="h-4 w-4" /> Create an admin user
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <Card>
-              <CardContent className="space-y-3 pt-6">
-                <p className="text-sm text-muted-foreground">
-                  An admin logs in with these details and lands on a read-only overview of
-                  everything here, where they can leave notes for you.
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Username</Label>
-                    <Input value={adminUser} onChange={(e) => setAdminUser(e.target.value)} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Password</Label>
-                    <Input
-                      type="password"
-                      value={adminPass}
-                      onChange={(e) => setAdminPass(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <Button onClick={makeAdmin} disabled={creating}>
-                  {creating ? "Creating..." : "Create admin user"}
-                </Button>
-              </CardContent>
-            </Card>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+      <p className="text-sm text-muted-foreground">
+        Admin logins are created on the “Admin accounts” page in the side menu.
+      </p>
     </div>
   );
 }

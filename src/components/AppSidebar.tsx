@@ -14,6 +14,7 @@ import {
   CalendarRange,
   StickyNote,
   ShieldCheck,
+  UserPlus,
   LogOut,
 } from "lucide-react";
 import {
