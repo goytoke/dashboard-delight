@@ -45,6 +45,7 @@ const items = [
   { title: "Summary", url: "/summary", icon: CalendarRange },
   { title: "Records", url: "/records", icon: FolderClock },
   { title: "Notes & To-do", url: "/notes", icon: StickyNote },
+  { title: "Admin accounts", url: "/team", icon: UserPlus },
 ] as const;
 
 export function AppSidebar() {
