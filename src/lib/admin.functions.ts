@@ -104,7 +104,11 @@ export const updateAdminUser = createServerFn({ method: "POST" })
     },
   )
   .handler(async ({ data, context }) => {
-    await assertCanManage(context, context.userId, data.id);
+    const { data: callerIsAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    await assertCanManage(Boolean(callerIsAdmin), context.userId, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     if (data.password) {
@@ -143,7 +147,11 @@ export const deleteAdminUser = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     if (data.id === context.userId) throw new Error("You cannot delete your own account.");
-    await assertCanManage(context, context.userId, data.id);
+    const { data: callerIsAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    await assertCanManage(Boolean(callerIsAdmin), context.userId, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("admin_permissions").delete().eq("user_id", data.id);
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
@@ -159,7 +167,11 @@ export const setAdminPermissions = createServerFn({ method: "POST" })
     return input;
   })
   .handler(async ({ data, context }) => {
-    await assertCanManage(context, context.userId, data.id);
+    const { data: callerIsAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    await assertCanManage(Boolean(callerIsAdmin), context.userId, data.id);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const rows = data.permissions.map((p) => ({
       user_id: data.id,
