@@ -22,16 +22,8 @@ type PermRow = {
 };
 
 /** The caller may manage an account when they are an admin or they created it. */
-async function assertCanManage(
-  context: { supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown }> } },
-  userId: string,
-  targetId?: string,
-) {
+async function assertCanManage(isAdmin: boolean, userId: string, targetId?: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data: isAdmin } = await context.supabase.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
   if (isAdmin) return;
   if (targetId) {
     const { data: row } = await supabaseAdmin
