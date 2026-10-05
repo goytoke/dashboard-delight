@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS total_net_pl numeric NOT NULL DEFAULT 0;

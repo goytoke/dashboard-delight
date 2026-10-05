@@ -1,4 +1,7 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useAccess, allows, pathPageKey, PERMISSION_PAGES } from "@/lib/permissions";
+import { AccountPlAlerts } from "@/components/AccountPlAlerts";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { RefreshButton } from "@/components/RefreshButton";
@@ -18,6 +21,16 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AppLayout() {
+  const { data: access } = useAccess();
+  const path = useRouterState({ select: (r) => r.location.pathname });
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!access?.isAdmin) return;
+    if (allows(access, pathPageKey(path), "view")) return;
+    const first = PERMISSION_PAGES.find((p) => access.perms[p.key]?.can_view);
+    const target = first?.path ?? "/notes";
+    if (target !== path) navigate({ to: target as "/" });
+  }, [access, path, navigate]);
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -37,6 +50,7 @@ function AppLayout() {
           </header>
           <main className="flex-1 p-4 md:p-6">
             <Outlet />
+            <AccountPlAlerts />
           </main>
         </div>
       </div>

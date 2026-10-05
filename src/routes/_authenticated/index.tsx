@@ -59,7 +59,11 @@ export const Route = createFileRoute("/_authenticated/")({
       .eq("user_id", userData.user.id)
       .eq("role", "admin")
       .maybeSingle();
-    if (data) throw redirect({ to: "/admin" });
+    if (data) {
+      const { firstAllowedPath } = await import("@/lib/permissions");
+      const target = await firstAllowedPath();
+      if (target !== "/") throw redirect({ to: target as "/" });
+    }
   },
   head: () => ({
     meta: [

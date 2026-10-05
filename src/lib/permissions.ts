@@ -95,6 +95,14 @@ async function fetchAccess() {
   return { isAdmin, perms };
 }
 
+/** Where a limited user should land: their first permitted page. */
+export async function firstAllowedPath() {
+  const access = await fetchAccess();
+  if (!access.isAdmin) return "/";
+  const page = PERMISSION_PAGES.find((p) => access.perms[p.key]?.can_view);
+  return page?.path ?? "/notes";
+}
+
 export function useAccess() {
   return useQuery({
     queryKey: ["my-access"],

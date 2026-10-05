@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/lib/notes";
+import { useAccess, allows, pathPageKey } from "@/lib/permissions";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -46,13 +47,17 @@ const items = [
   { title: "Summary", url: "/summary", icon: CalendarRange },
   { title: "Records", url: "/records", icon: FolderClock },
   { title: "Notes & To-do", url: "/notes", icon: StickyNote },
-  { title: "Admin accounts", url: "/team", icon: UserPlus },
+  { title: "User accounts", url: "/team", icon: UserPlus },
 ] as const;
 
 export function AppSidebar() {
   const navigate = useNavigate();
   const { data: isAdmin = false } = useIsAdmin();
   const currentPath = useRouterState({ select: (r) => r.location.pathname });
+  const { data: access } = useAccess();
+  const shown = items.filter((i) =>
+    access?.isAdmin ? allows(access, pathPageKey(i.url), "view") : true,
+  );
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -77,7 +82,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {shown.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={item.url === "/" ? currentPath === "/" : currentPath.startsWith(item.url)}>
                     <Link to={item.url} className="flex items-center gap-2">
@@ -87,7 +92,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {isAdmin ? (
+              {isAdmin && !access?.isAdmin ? (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={currentPath.startsWith("/admin")}>
                     <Link to="/admin" className="flex items-center gap-2">

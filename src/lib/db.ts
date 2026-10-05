@@ -74,6 +74,7 @@ export interface Account extends Row {
   vps_id: string | null;
   activated_on: string | null;
   cycle_days: number;
+  total_net_pl: number;
   notes: string | null;
 
 }
@@ -280,6 +281,8 @@ export function useSaveRow(table: TableName, extraInvalidate: TableName[] = []) 
     mutationFn: async (row: Row) => {
       const { id, ...rest } = row as { id?: string };
       const payload = rest as Row;
+      const { assertTableAccess } = await import("@/lib/permissions");
+      await assertTableAccess(table, id ? "edit" : "add");
       if (id) {
         const { error } = await supabase
           .from(table)
@@ -305,6 +308,8 @@ export function useDeleteRow(table: TableName, extraInvalidate: TableName[] = []
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      const { assertTableAccess } = await import("@/lib/permissions");
+      await assertTableAccess(table, "delete");
       const { error } = await supabase.from(table).delete().eq("id", id);
       if (error) throw error;
     },

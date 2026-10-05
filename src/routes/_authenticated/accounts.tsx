@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/PageHeader";
 import { RecordDialog, type FieldSpec } from "@/components/RecordDialog";
 import { accountDeadline } from "@/lib/alerts";
+import { plLevel } from "@/components/AccountPlAlerts";
 import { useDeadlineConfig } from "@/lib/settings";
 import {
   money,
@@ -96,6 +97,7 @@ function AccountsPage() {
     },
     { name: "activated_on", label: "Active since", type: "date" },
     { name: "cycle_days", label: "Deadline (days from activation)", type: "number" },
+    { name: "total_net_pl", label: "Total net P/L (update when you close)", type: "number" },
     { name: "notes", label: "Notes", type: "textarea" },
   ];
 
@@ -211,6 +213,7 @@ function AccountsPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>First deposit</TableHead>
                 <TableHead>VPS</TableHead>
+                <TableHead>Net P/L</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Deadline</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -219,7 +222,7 @@ function AccountsPage() {
             <TableBody>
               {visible.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="py-10 text-center text-muted-foreground">
                     No accounts here yet.
                   </TableCell>
                 </TableRow>
@@ -227,15 +230,31 @@ function AccountsPage() {
               {visible.map((a) => {
                 const dl = accountDeadline(a, config.accountCycleDays);
                 const expired = dl?.expired ?? false;
+                const pl = plLevel(a);
                 return (
                 <TableRow key={a.id} className={expired ? "opacity-40 blur-[1px]" : undefined}>
-                  <TableCell className="font-medium">{a.broker}</TableCell>
+                  <TableCell className={`font-medium ${pl === "churn" ? "text-destructive" : pl === "warn" ? "text-warning" : ""}`}>{a.broker}</TableCell>
                   <TableCell>{a.account_name}</TableCell>
                   <TableCell className="font-mono text-xs">{a.login ?? "—"}</TableCell>
                   <TableCell className="text-xs">{a.email ?? "—"}</TableCell>
                   <TableCell>{money(a.first_deposit)}</TableCell>
                   <TableCell className="text-xs">
                     {servers.find((v) => v.id === a.vps_id)?.name ?? "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        pl === "churn"
+                          ? "bg-destructive text-destructive-foreground border-destructive"
+                          : pl === "warn"
+                            ? "bg-warning text-warning-foreground border-warning"
+                            : ""
+                      }
+                    >
+                      {money(a.total_net_pl ?? 0)}
+                      {pl === "churn" ? " · churn" : pl === "warn" ? " · watch" : ""}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className={`capitalize ${statusTone[a.status]}`}>
