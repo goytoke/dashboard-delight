@@ -54,13 +54,13 @@ import { PERMISSION_PAGES, EMPTY_PERM, type PagePerm } from "@/lib/permissions";
 export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({
     meta: [
-      { title: "Admin accounts — Bot Ops Tracker" },
+      { title: "User accounts — Bot Ops Tracker" },
       {
         name: "description",
         content:
           "Create logins with name, phone, username, password and role, switch page access on or off, and edit or remove accounts.",
       },
-      { property: "og:title", content: "Admin accounts — Bot Ops Tracker" },
+      { property: "og:title", content: "User accounts — Bot Ops Tracker" },
       {
         property: "og:description",
         content: "Create, edit and remove the people who can sign in, and choose what each one may do.",
@@ -186,7 +186,7 @@ function TeamPage() {
           })),
         },
       });
-      toast.success(`${res.username} can now log in as ${res.role}.`);
+      toast.success(`${res.username} can now log in.`);
       reset();
       setShowForm(false);
       qc.invalidateQueries({ queryKey: ["admin-users"] });
@@ -211,8 +211,8 @@ function TeamPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Admin accounts"
-        subtitle="Create a login, hand over the username and password, and switch on exactly the pages and actions that person may use."
+        title="User accounts"
+        subtitle="Click Add account, give a username and password, and switch on the pages they may see and use. They only see what you allow."
       />
 
       <div className="flex justify-end">
@@ -244,18 +244,6 @@ function TeamPage() {
                 <Input inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Role</Label>
-                <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin (limited access)</SelectItem>
-                    <SelectItem value="owner">Owner (full access)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Username</Label>
                 <Input value={username} onChange={(e) => setUsername(e.target.value)} />
               </div>
@@ -277,7 +265,7 @@ function TeamPage() {
               </div>
             </div>
 
-            {role === "admin" && (
+            {(
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">What this person may do</Label>
                 <PermissionGrid value={perms} onChange={setPerms} />
@@ -302,7 +290,7 @@ function TeamPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead>Phone</TableHead>
-                <TableHead>Role</TableHead>
+                <TableHead>Pages</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -315,7 +303,7 @@ function TeamPage() {
                   <TableCell className="text-muted-foreground">{m.username}</TableCell>
                   <TableCell className="text-muted-foreground">{m.phone || "—"}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{m.role}</Badge>
+                    <Badge variant="secondary">{m.role === "owner" ? "Full access" : `${m.permissions.filter((x) => x.can_view).length} pages`}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -415,7 +403,7 @@ function EditDialog({
     setSaving(true);
     try {
       await updateAdminUser({
-        data: { id: member.id, firstName, lastName, phone, role, password: password || undefined },
+        data: { id: member.id, firstName, lastName, phone, role, ...(password ? { password } : {}) },
       });
       await setAdminPermissions({
         data: {
@@ -454,18 +442,6 @@ function EditDialog({
               <Label className="text-xs text-muted-foreground">Phone number</Label>
               <Input inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Role</Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin (limited access)</SelectItem>
-                  <SelectItem value="owner">Owner (full access)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-xs text-muted-foreground">
                 New password (leave empty to keep the current one)
@@ -478,7 +454,7 @@ function EditDialog({
             </div>
           </div>
 
-          {role === "admin" && (
+          {(
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">What this person may do</Label>
               <PermissionGrid value={perms} onChange={setPerms} />
