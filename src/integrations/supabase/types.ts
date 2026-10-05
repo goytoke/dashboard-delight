@@ -29,6 +29,7 @@ export type Database = {
           notes: string | null
           password: string | null
           status: string
+          total_net_pl: number
           updated_at: string
           user_id: string
           vps_id: string | null
@@ -47,6 +48,7 @@ export type Database = {
           notes?: string | null
           password?: string | null
           status?: string
+          total_net_pl?: number
           updated_at?: string
           user_id: string
           vps_id?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           notes?: string | null
           password?: string | null
           status?: string
+          total_net_pl?: number
           updated_at?: string
           user_id?: string
           vps_id?: string | null
